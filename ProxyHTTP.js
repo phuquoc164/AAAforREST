@@ -29,9 +29,19 @@ if (!conf || !port) {
 // Function that write the log inside the file related to right server
 
 var log = function (context, err, code){
-  var rule=context.hasOwnProperty("ruleNo") ?
-    "["+context.ruleNo+"]":
-    "[##]";
+  var rule='??';
+  var logFile="ProxyHTTP.log";
+  if ('conf' in context) {
+    var thisConf=conf[context.conf];
+    if ('logFile' in thisConf) logFile=thisConf.logFile;
+    rule=context.conf+'/';
+    if ('ruleNo' in context) {
+      rule+=context.ruleNo;
+    } else {
+      rule+='##';
+    }
+  }
+  rule='['+rule+']';
   if (context.restricted){
     if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.url + "\t" + code +"\t"+rule+"\n";
     else var data = "" + context.date + "\t" + err +"\n";
