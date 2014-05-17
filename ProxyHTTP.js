@@ -17,18 +17,20 @@ try {
 
 // Function that write the log inside the file related to right server
 
-var log = function (context, err, code, callback){
+var log = function (context, err, code){
+  var rule=context.hasOwnProperty("ruleNo") ?
+    "["+context.ruleNo+"]":
+    "[##]";
   if (context.restricted){
-    if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.url + "\t" + code +"\n";
+    if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.url + "\t" + code +"\t"+rule+"\n";
     else var data = "" + context.date + "\t" + err +"\n";
-  }else if (err == "HTTP")var data = "" + context.date + "\t" + context.req.method + "\t" + context.req.headers.host + context.req.url + "\t" + code +"\n";
+  }else if (err == "HTTP")var data = "" + context.date + "\t" + context.req.method + "\t" + context.req.headers.host + context.req.url + "\t" + code +"\t"+rule+"\n";
   
   if (data){
     console.log(data);
     if (context.conf) fs.appendFileSync(conf[context.conf].logFile, data);
     else fs.appendFileSync("ProxyHTTP.log", data); //change the name of the proxy log file inside the code
   };
-  callback();
 };
 
 // Test function for basic http authentication with a fixed login/password defined in config.json
@@ -40,7 +42,7 @@ var authentifyDummy =function (context, callback){
   if(!context.req.headers.authorization){
     context.res.statusCode = 401;
     context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-    log(context, "HTTP", 401, function(){});
+    log(context, "HTTP", 401);
     context.res.end();
   }else{
     if(context.login === conf[context.conf].authData.login && context.pw === conf[context.conf].authData.pw){
@@ -48,7 +50,7 @@ var authentifyDummy =function (context, callback){
     }else{
       context.res.statusCode = 401;
       context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-      log(context, "HTTP", 401, function(){});
+      log(context, "HTTP", 401);
       context.res.end();
     }
   }
@@ -74,7 +76,7 @@ var authentifyLDAP =function (context, callback){
   if(!context.req.headers.authorization){
     context.res.statusCode = 401;
     context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-    log(context, "HTTP", 401, function(){});
+    log(context, "HTTP", 401);
     context.res.end();
   }else{
     if (!servLDAP[conf[context.conf].ldap.url] || !servLDAP[conf[context.conf].ldap.url][context.auth]){
@@ -97,10 +99,10 @@ var authentifyLDAP =function (context, callback){
           });
         }else{
 	        console.log("LDAP error : " + JSON.stringify(err));
-          log(context, err, 0, function(){});
+          log(context, err, 0);
           context.res.statusCode = 401;
           context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-          log(context, "HTTP", 401, function(){});
+          log(context, "HTTP", 401);
           context.res.end();
         }
       });
@@ -122,7 +124,7 @@ var AuthorizList =function (context, callback){
   if(conf[context.conf].restricted[idDoc]){
     if (conf[context.conf].restricted[idDoc].indexOf(context.login) == -1){
       context.res.statusCode = 403;
-      log(context, "HTTP", 403, function(){});
+      log(context, "HTTP", 403);
       context.res.end("Forbidden");
     } else callback();
   }else{
@@ -143,7 +145,7 @@ var proxyWork = function(context, callback){
       }
     }
     context.res.writeHead(res.statusCode, res.headers);
-    log(context, "HTTP", res.statusCode, function(){});
+    log(context, "HTTP", res.statusCode);
     res.on('data',function(chunkOrigin) {
         context.res.write(chunkOrigin);
     });
@@ -155,7 +157,7 @@ var proxyWork = function(context, callback){
   proxyReq.on('error', function(err){
     console.log('problem with the server: ' + JSON.stringify(err));
     context.res.writeHead(504);
-    log(context, "HTTP", 504, function(){});
+    log(context, "HTTP", 504);
     context.res.end("Gateway Timeout");
   });
 
@@ -204,7 +206,7 @@ http.createServer(function (request, response){
   var index = matching(request.headers.host);
   if(index == -1){
     response.writeHead(404);
-    log(context, "HTTP", 404, function(){});
+    log(context, "HTTP", 404);
     response.end("Not Found");
   }else{
   	context.conf = index;
