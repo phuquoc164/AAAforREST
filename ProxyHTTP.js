@@ -133,7 +133,7 @@ var AuthorizList =function (context, callback){
 // Main proxy function that forward the request and the related answers
 
 var proxyWork = function(context, callback){
-   proxyReq = http.request(context.options, function (res){
+   var proxyReq = http.request(context.options, function (res){
 
     if (res.headers.location && conf[context.conf].rewritePath.enable){
       var splitHeaders = res.headers.location.split('/');
@@ -164,13 +164,13 @@ var proxyWork = function(context, callback){
   });
 
   context.req.on('error', function(err) {
-    log(context, err, 0, function(){});
+    log(context, err, 0);
     console.log('problem with request: ' + err.message);
   });
 
   context.req.on('end', function(){
     proxyReq.end();
-    callback();
+    isFunction(callback) && callback();
   });
 }
 
@@ -194,7 +194,12 @@ http.createServer(function (request, response){
   var context = {
     "req": request,
     "res": response,
-    "date": new Date()
+    "date": new Date(),
+    log: log,
+    proxyWork: proxyWork,
+    AuthorizList: AuthorizList,
+    authentifyLDAP: authentifyLDAP,
+    authentifyDummy: authentifyDummy
   };
   var index = matching(request.headers.host);
   if(index == -1){
@@ -215,7 +220,7 @@ http.createServer(function (request, response){
       'headers': head,
       'agent': false
     };
-    
+
     context.options = options;
 
     if (request.headers.authorization){
@@ -226,12 +231,28 @@ http.createServer(function (request, response){
 
     var i=0;
     var breaker = false;
+    var found=false;
     while(i<conf[index].rules.length && !breaker){
-      if(eval(conf[index].rules[i].control)){
-        eval(conf[index].rules[i].action);
+      var control=conf[index].rules[i].control;
+      var action=conf[index].rules[i].action;
+      var test=false;
+      if(isFunction(control)) test=control(context);
+      else if (typeof control == "string") test=eval(control);
+      if (test===true) {
+        found=true;
+        context.ruleNo=i;
+        if (isFunction(action)){
+          action(context);
+        } else {
+	  eval(action);
+        }
         breaker = conf[index].rules[i].final;
       }
       i++;
+    }
+    if (!found) {
+      proxyWork(context, function(){
+      });
     }
   }
 }).listen(1337); // port has to be changed directly inside the code. 

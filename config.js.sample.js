@@ -2,9 +2,9 @@ module.exports=
 [
   {
     "hostProxy" : "acme.com", // name of the virtual server
-  	"host": "://tex.avery.org", // name of the physical server
-  	"port": 7777, // port number of the physical server
-  	"path": "", // additional path information to access the physical server
+	"host": "tex.avery.org", // name of the physical server
+	"port": 7777, // port number of the physical server
+	"path": "", // additional path information to access the physical server
     "logFile": "acme.log", // name of the log file
     "rewritePath": { // rewrite the hostProxy name inside the answer headers
       "enable":true,
@@ -25,14 +25,18 @@ module.exports=
       },
 
     "rules":[    { // list rules that define the proxy behaviours for this server
-          "control": "request.method != 'GET'", // define when this rules is trigged
-          "action": "authentifyLDAP(context, function(){AuthorizList(context, function(){proxyWork(context, function(){});});});", // what the proxy has to do
+          "control": function(context){ // define when this rules is trigged
+	    return context.req.method != 'GET';
+	  },
+          "action": function(context) { // what the proxy has to do
+	    context.authentifyLDAP(context, function(){
+	      context.AuthorizList(context, function(){
+	        context.proxyWork(context)
+	      ;})
+	    ;})
+	  },
           "final": true // define if the proxy has to search for other relevents rules
-          },{
-          "control": "true",
-          "action": "proxyWork(context, function(){});",
-          "final": true
-        }]
+          }]
   },
   {"hostProxy":"test.acme.shop.com",
   	"host": "tex.test.server.com",
@@ -50,12 +54,12 @@ module.exports=
     },
     "rules": [{
           "control": "request.method != 'GET'",
-          "action": "authentifyDummy(context, function(){proxyWork(context, function(){});});",
+          "action": function(context) {
+	    context.authentifyDummy(context, function(){
+	      context.proxyWork(context);
+	    });
+	  },
           "final": true
-          },{
-          "control": "true",
-          "action": "proxyWork(context, function(){});",
-          "final": true
-        }]
+          }]
   }
 ];
