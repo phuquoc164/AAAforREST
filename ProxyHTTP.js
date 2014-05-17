@@ -211,6 +211,7 @@ http.createServer(function (request, response){
     
     var head = JSON.parse(JSON.stringify(request.headers)); 
     if (request.headers.authorization && conf[index].hideAuth) delete head.authorization;
+    if (!conf[index].preserveHost) delete head.host;
     
     var options = {
       'host': conf[index].host,
