@@ -5,19 +5,24 @@ var url = require('url');
 var time = require ('timers');
 
 function isFunction(fun) { return typeof fun == "function";}
+var conf={};
 
 if (fs.existsSync('config.js')) {
-  var conf = require("./config");
+  conf = require("./config");
+  var servers=conf.servers;
+  var port=conf.port;
+  conf=servers;
 }
 if (fs.existsSync('config.json')) {
   // Reading of the main configuration file : config.json
-  var conf = JSON.parse(
+  conf = JSON.parse(
     fs.readFileSync('config.json', 'utf8')
   );
+  var port=1337;
 }
 
-if (!conf) {
-  console.log("please configure the reverse Proxy");
+if (!conf || !port) {
+  console.log("please configure the reverse Proxy correctly");
   process.exit(1);
 }
 
@@ -190,6 +195,10 @@ var matching = function(host){
   while ((verif == false) && (i < conf.length)){
     var re = new RegExp(conf[i].hostProxy, "i");
     verif = re.test(host);
+    if (!verif) {
+      var re = new RegExp(conf[i].hostProxy+":"+port, "i");
+      verif = re.test(host);
+    }
     if (verif == false)i++;
   };
   if (verif == false ) i = -1;
@@ -264,5 +273,5 @@ http.createServer(function (request, response){
       });
     }
   }
-}).listen(1337); // port has to be changed directly inside the code. 
-console.log('Server running port 1337');
+}).listen(port); // port has to be changed directly inside the code. 
+console.log('Server running port '+port);
