@@ -6,13 +6,19 @@ var time = require ('timers');
 
 function isFunction(fun) { return typeof fun == "function";}
 
-try {
+if (fs.existsSync('config.js')) {
   var conf = require("./config");
-} catch (e) {
+}
+if (fs.existsSync('config.json')) {
   // Reading of the main configuration file : config.json
   var conf = JSON.parse(
     fs.readFileSync('config.json', 'utf8')
   );
+}
+
+if (!conf) {
+  console.log("please configure the reverse Proxy");
+  process.exit(1);
 }
 
 // Function that write the log inside the file related to right server
