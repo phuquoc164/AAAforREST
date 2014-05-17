@@ -17,9 +17,9 @@ The proxy is divide into two file:
 Program requirement 
 ----------------------
 
-* Install node.js and the package ldapjs
+* Install node.js and the package ldapjs (npm install)
 
-* Create a config.json without commentaries
+* Create a config.json without comments or config.js with comments
 
 * Modify the port number inside ProxyHTTP.js 
 
