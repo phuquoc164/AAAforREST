@@ -4,11 +4,16 @@ var ldap = require('ldapjs');
 var url = require('url');
 var time = require ('timers');
 
-// Reading of the main configuration file : config.json
+function isFunction(fun) { return typeof fun == "function";}
 
-var conf = JSON.parse(
-  fs.readFileSync('config.json', 'utf8')
-);
+try {
+  var conf = require("./config");
+} catch (e) {
+  // Reading of the main configuration file : config.json
+  var conf = JSON.parse(
+    fs.readFileSync('config.json', 'utf8')
+  );
+}
 
 // Function that write the log inside the file related to right server
 
