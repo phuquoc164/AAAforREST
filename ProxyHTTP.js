@@ -154,6 +154,25 @@ var AuthorizList =function (context, callback){
   }
 }
 
+function uCaseWord(word) {
+  switch(word) {
+    case 'etag':return 'ETag';
+    default: return word.replace(/^./,function(l){return l.toUpperCase();});
+  }
+}
+
+function uCaseHeader(headerName) {
+  return headerName.replace(/\w*/g,uCaseWord);
+}
+
+function couchDBHeaders(nodeHeaders) {
+  var couchHeaders={};
+  for (var i in nodeHeaders) {
+    couchHeaders[uCaseHeader(i)]=nodeHeaders[i];
+  }
+  return couchHeaders;
+}
+
 // Main proxy function that forward the request and the related answers
 
 var proxyWork = function(context, callback){
@@ -166,7 +185,15 @@ var proxyWork = function(context, callback){
         res.headers.location = res.headers.location +'/'+ splitHeaders[i];
       }
     }
-    context.res.writeHead(res.statusCode, res.headers);
+
+    var headers=res.headers;
+    if ('rawHeaders' in res) { //this is true for node.js >=0.11.6
+      headers=res.rawHeaders;
+    } else if (conf[context.conf].couchDBCompat) {
+      headers=couchDBHeaders(headers);
+    }
+
+    context.res.writeHead(res.statusCode, headers);
     log(context, "HTTP", res.statusCode);
     res.on('data',function(chunkOrigin) {
         context.res.write(chunkOrigin);
@@ -227,7 +254,8 @@ http.createServer(function (request, response){
     proxyWork: proxyWork,
     AuthorizList: AuthorizList,
     authentifyLDAP: authentifyLDAP,
-    authentifyDummy: authentifyDummy
+    authentifyDummy: authentifyDummy,
+    couchDBHeaders: couchDBHeaders
   };
   var index = matching(request.headers.host);
   if(index == -1){
