@@ -29,6 +29,7 @@ if (!conf || !port) {
 // Function that write the log inside the file related to right server
 
 var log = function (context, err, code){
+  var remoteIP=context.req.headers["x-forwarded-for"] || context.req.connection.remoteAddress;;
   var rule='??';
   var logFile="ProxyHTTP.log";
   if ('conf' in context) {
@@ -42,15 +43,15 @@ var log = function (context, err, code){
     }
   }
   rule='['+rule+']';
-  if (context.restricted){
-    if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.url + "\t" + code +"\t"+rule+"\n";
-    else var data = "" + context.date + "\t" + err +"\n";
-  }else if (err == "HTTP")var data = "" + context.date + "\t" + context.req.method + "\t" + context.req.headers.host + context.req.url + "\t" + code +"\t"+rule+"\n";
+    if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + remoteIP + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.url + "\t" + code +"\t"+rule;
+
+    else if (context.restricted) var data = "" + context.date + "\t" + remoteIP + "\t" + err;
+    else if (err == "HTTP")var data = "" + context.date + "\t" + remoteIP + "\t" + context.req.method + "\t" + context.req.headers.host + context.req.url + "\t" + code +"\t"+rule;
   
   if (data){
     console.log(data);
-    if ('conf' in context) fs.appendFileSync(conf[context.conf].logFile, data);
-    else fs.appendFileSync("ProxyHTTP.log", data); //change the name of the proxy log file inside the code
+    if ('conf' in context) fs.appendFileSync(conf[context.conf].logFile, data+"\n");
+    else fs.appendFileSync("ProxyHTTP.log", data+"\n"); //change the name of the proxy log file inside the code
   };
 };
 
