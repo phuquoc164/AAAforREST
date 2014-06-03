@@ -62,18 +62,14 @@ var authentifyDummy =function (context, callback){
   context.restricted = true;
 
   if(!context.req.headers.authorization){
-    context.res.statusCode = 401;
     context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-    log(context, "HTTP", 401);
-    context.res.end();
+    sendResponse(context,401);
   }else{
     if(context.login === conf[context.conf].authData.login && context.pw === conf[context.conf].authData.pw){
       callback();
     }else{
-      context.res.statusCode = 401;
       context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-      log(context, "HTTP", 401);
-      context.res.end();
+      sendResponse(context,401);
     }
   }
 }
@@ -96,10 +92,8 @@ var authentifyLDAP =function (context, callback){
   context.restricted = true;
 
   if(!context.req.headers.authorization){
-    context.res.statusCode = 401;
     context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-    log(context, "HTTP", 401);
-    context.res.end();
+    sendResponse(context,401);
   }else{
     if (!servLDAP[conf[context.conf].ldap.url] || !servLDAP[conf[context.conf].ldap.url][context.auth]){
 
@@ -136,6 +130,11 @@ var authentifyLDAP =function (context, callback){
   }
 }
 
+var sendResponse=function(context,statusCode,message) {
+  context.res.statusCode = statusCode;
+  log(context, "HTTP", statusCode);
+  context.res.end(message);
+}
 // Function that manage the authorization to access to specific resources defined inside config.json
 
 var AuthorizList =function (context, callback){
@@ -145,9 +144,7 @@ var AuthorizList =function (context, callback){
   var idDoc = context.req.url.split('/')[3];
   if(conf[context.conf].restricted[idDoc]){
     if (conf[context.conf].restricted[idDoc].indexOf(context.login) == -1){
-      context.res.statusCode = 403;
-      log(context, "HTTP", 403);
-      context.res.end("Forbidden");
+      sendResponse(context,403,"Forbidden");
     } else callback();
   }else{
     callback();
@@ -200,14 +197,13 @@ var proxyWork = function(context, callback){
     });
     res.on('end', function(){
       context.res.end();
+      isFunction(callback) && callback();
     });
   });
 
   proxyReq.on('error', function(err){
     console.log('problem with the server: ' + JSON.stringify(err));
-    context.res.writeHead(504);
-    log(context, "HTTP", 504);
-    context.res.end("Gateway Timeout");
+    sendResponse(context,504,"Gateway Timeout");
   });
 
   context.req.on('data', function(chunkInit){
@@ -221,7 +217,6 @@ var proxyWork = function(context, callback){
 
   context.req.on('end', function(){
     proxyReq.end();
-    isFunction(callback) && callback();
   });
 }
 
@@ -251,17 +246,36 @@ http.createServer(function (request, response){
     "res": response,
     "date": new Date(),
     log: log,
+    sendResponse: sendResponse,
     proxyWork: proxyWork,
     AuthorizList: AuthorizList,
     authentifyLDAP: authentifyLDAP,
     authentifyDummy: authentifyDummy,
     couchDBHeaders: couchDBHeaders
   };
+
+  var domain=require("domain").create();
+  domain.on("uncaughtException",function(err) {
+    console.log("BIG UNCAUGHT EXCEPTION");
+    console.log(err);
+    console.log(err.stack);
+    sendResponse(context,500,"Server Exception ");
+  });
+  domain.on("error",function(err) {
+    console.log("BIG ERROR");
+    console.log(err);
+    console.log(err.stack);
+    sendResponse(context,500,"Server Error ");
+  });
+
+  domain.add(request);
+  domain.add(response);
+
+  domain.run(function() {
+
   var index = matching(request.headers.host);
   if(index == -1){
-    response.writeHead(404);
-    log(context, "HTTP", 404);
-    response.end("Not Found");
+    sendResponse(context,404,"Not Found");
   }else{
   	context.conf = index;
     
@@ -290,20 +304,28 @@ http.createServer(function (request, response){
     var breaker = false;
     var found=false;
     while(i<conf[index].rules.length && !breaker){
-      var control=conf[index].rules[i].control;
-      var action=conf[index].rules[i].action;
-      var test=false;
-      if(isFunction(control)) test=control(context);
-      else if (typeof control == "string") test=eval(control);
-      if (test===true) {
-        found=true;
-        context.ruleNo=i;
-        if (isFunction(action)){
-          action(context);
-        } else {
-	  eval(action);
-        }
-        breaker = conf[index].rules[i].final;
+      console.log("testing rule "+i+" of conf "+index);
+      try {
+	var control=conf[index].rules[i].control;
+	var action=conf[index].rules[i].action;
+	var test=false;
+	if(isFunction(control)) test=control(context);
+	else if (typeof control == "string") test=eval(control);
+	if (test) {
+          console.log("test passed!");
+	  context.ruleNo=i;
+	  if (isFunction(action)){
+	    found=action(context);
+	  } else {
+	    found=eval(action);
+	  }
+	  breaker = conf[index].rules[i].final;
+	  console.log(breaker?"last one":"go on testing");
+	}
+      } catch(e) {
+	console.log(e.stack);
+	sendResponse(context,500,"Server Exception "+index+"/"+i);
+	breaker=true;
       }
       i++;
     }
@@ -312,5 +334,6 @@ http.createServer(function (request, response){
       });
     }
   }
+  });
 }).listen(port); // port has to be changed directly inside the code. 
 console.log('Server running port '+port);
