@@ -2,7 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var ldap = require('ldapjs');
 var url = require('url');
-var time = require ('timers');
+var crypto = require ('crypto');
 
 function isFunction(fun) { return typeof fun == "function";}
 var conf={};
@@ -91,7 +91,8 @@ var flush = function(id, server){
 var loginLDAP = function (context, callback) {
   var url=conf[context.conf].ldap.url;
   var ldapReq=conf[context.conf].ldap.id+ context.login +','+conf[context.conf].ldap.cn; //do not manage more than one dc information
-  var id=ldapReq+":"+context.pw;
+  var id=crypto.createHash('sha1').update(url).update(ldapReq).update(context.pw).digest('hex');
+  console.log("logging in "+ldapReq+" into "+url);
   if (!servLDAP[url] || !servLDAP[url][id]){
 
   var serveursLDAP=ldap.createClient({
@@ -103,7 +104,11 @@ var loginLDAP = function (context, callback) {
       if (!servLDAP[url]) {
 	  servLDAP[url] ={};
       }
-      servLDAP[url][id] = setTimeout(flush, 60000, id, url);
+      if (!servLDAP[url][id]) {
+        servLDAP[url][id] = setTimeout(flush, 600000, id, url);
+      } else {
+        console.log("skipping timeout flush, already done");
+      }
       console.log(servLDAP);
       serveursLDAP.unbind(function () {
         callback(err);
@@ -113,8 +118,7 @@ var loginLDAP = function (context, callback) {
     }
   });
   }else{
-    clearTimeout(servLDAP[url][id]);
-    servLDAP[url][id] = setTimeout(flush, 60000, id, url);
+    console.log("reuse existing credentials");
     callback();
   }
 }
