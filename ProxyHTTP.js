@@ -130,13 +130,15 @@ var authentifyLDAP =function (context, callback){
 
       loginLDAP( context, function(err) {
 	  if (!err) {
+	    console.log("authentified!");
+	    callback(err);
  	  } else {
 	    console.log("LDAP error : " + JSON.stringify(err));
 	    log(context, err, 0);
 	    context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
 	    sendResponse(context,401);
 	  }
-	});
+      });
   }
 }
 
