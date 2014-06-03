@@ -81,11 +81,43 @@ var servLDAP = {};
 // Function that remove old cached informations about LDAP bind
 
 var flush = function(id, server){
+  console.log("flushing ldap auth "+id+" from server "+server);
   delete servLDAP[server][id];
   if (servLDAP[server] === {}) delete servLDAP[server];
 };
 
 // LDAP bind with HTTP basic authentication
+
+var loginLDAP = function (context, callback) {
+  var url=conf[context.conf].ldap.url;
+  var ldapReq=conf[context.conf].ldap.id+ context.login +','+conf[context.conf].ldap.cn; //do not manage more than one dc information
+  var id=ldapReq+":"+context.pw;
+  if (!servLDAP[url] || !servLDAP[url][id]){
+
+  var serveursLDAP=ldap.createClient({
+    'url' : url
+  });
+
+  serveursLDAP.bind(ldapReq, context.pw, function(err) {
+    if (!err) {
+      if (!servLDAP[url]) {
+	  servLDAP[url] ={};
+      }
+      servLDAP[url][id] = setTimeout(flush, 60000, id, url);
+      console.log(servLDAP);
+      serveursLDAP.unbind(function () {
+        callback(err);
+      });
+    } else {
+      callback(err);
+    }
+  });
+  }else{
+    clearTimeout(servLDAP[url][id]);
+    servLDAP[url][id] = setTimeout(flush, 60000, id, url);
+    callback();
+  }
+}
 
 var authentifyLDAP =function (context, callback){
 
@@ -95,38 +127,16 @@ var authentifyLDAP =function (context, callback){
     context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
     sendResponse(context,401);
   }else{
-    if (!servLDAP[conf[context.conf].ldap.url] || !servLDAP[conf[context.conf].ldap.url][context.auth]){
 
-      ldapReq = conf[context.conf].ldap.id+ context.login +','+conf[context.conf].ldap.cn; //do not manage more than one dc information
-      var serveursLDAP=ldap.createClient({
-        'url' : conf[context.conf].ldap.url
-      });
-
-      serveursLDAP.bind(ldapReq, context.pw, function(err) { 
-        if (!err) {
-	        if (!servLDAP[conf[context.conf].ldap.url]) {
-            servLDAP[conf[context.conf].ldap.url] ={};
-            servLDAP[conf[context.conf].ldap.url][context.auth.toString()] = setTimeout(flush, 600000, [context.auth], [conf[context.conf].ldap.url]);
-          }else{
-            servLDAP[conf[context.conf].ldap.url][context.auth.toString()] = setTimeout(flush, 600000, [context.auth], [conf[context.conf].ldap.url]);
-          }
-          serveursLDAP.unbind(function(){
-            callback();
-          });
-        }else{
-	        console.log("LDAP error : " + JSON.stringify(err));
-          log(context, err, 0);
-          context.res.statusCode = 401;
-          context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-          log(context, "HTTP", 401);
-          context.res.end();
-        }
-      });
-    }else{
-      clearTimeout(servLDAP[conf[context.conf].ldap.url][context.auth.toString()]);
-      servLDAP[conf[context.conf].ldap.url][context.auth.toString()] = setTimeout(flush, 600000, [context.auth], [conf[context.conf].ldap.url]);
-      callback();
-    }
+      loginLDAP( context, function(err) {
+	  if (!err) {
+ 	  } else {
+	    console.log("LDAP error : " + JSON.stringify(err));
+	    log(context, err, 0);
+	    context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+	    sendResponse(context,401);
+	  }
+	});
   }
 }
 
@@ -250,6 +260,7 @@ http.createServer(function (request, response){
     proxyWork: proxyWork,
     AuthorizList: AuthorizList,
     authentifyLDAP: authentifyLDAP,
+    loginLDAP: loginLDAP,
     authentifyDummy: authentifyDummy,
     couchDBHeaders: couchDBHeaders
   };
