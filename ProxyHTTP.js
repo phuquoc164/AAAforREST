@@ -183,8 +183,11 @@ function couchDBHeaders(nodeHeaders) {
 // Main proxy function that forward the request and the related answers
 
 var proxyWork = function(context, callback){
+   console.log("proxying request...");
+   /*if (context.options.method!='PUT' && context.options.method!='POST') {
+     delete context.options.headers['content-length'];
+   }*/
    var proxyReq = http.request(context.options, function (res){
-
     if (res.headers.location && conf[context.conf].rewritePath.enable){
       var splitHeaders = res.headers.location.split('/');
       res.headers.location = context.req.headers.origin;
@@ -317,9 +320,8 @@ http.createServer(function (request, response){
     };
 
     var i=0;
-    var breaker = false;
     var found=false;
-    while(i<conf[index].rules.length && !breaker){
+    while(i<conf[index].rules.length && !found){
       console.log("testing rule "+i+" of conf "+index);
       try {
 	var control=conf[index].rules[i].control;
@@ -331,23 +333,24 @@ http.createServer(function (request, response){
           console.log("test passed!");
 	  context.ruleNo=i;
 	  if (isFunction(action)){
-	    found=action(context);
+	    action(context);
 	  } else {
-	    found=eval(action);
+	    eval(action);
 	  }
-	  breaker = conf[index].rules[i].final;
-	  console.log(breaker?"last one":"go on testing");
+	  if (conf[index].rules[i].final) {
+	    found = true;
+	  }
+	  console.log(found?"last one":"go on testing");
 	}
       } catch(e) {
 	console.log(e.stack);
 	sendResponse(context,500,"Server Exception "+index+"/"+i);
-	breaker=true;
+	found=true;
       }
       i++;
     }
     if (!found) {
-      proxyWork(context, function(){
-      });
+      proxyWork(context);
     }
   }
   });
