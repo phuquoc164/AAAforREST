@@ -216,6 +216,8 @@ var proxyWork = function(context, callback){
     sendResponse(context,504,"Gateway Timeout");
   });
 
+  if (context.req.readable) {
+
   context.req.on('data', function(chunkInit){
     proxyReq.write(chunkInit)
   });
@@ -228,6 +230,9 @@ var proxyWork = function(context, callback){
   context.req.on('end', function(){
     proxyReq.end();
   });
+  } else {
+    proxyReq.end();
+  }
 }
 
 // Function that allow to find the index of the requested server inside config.json
