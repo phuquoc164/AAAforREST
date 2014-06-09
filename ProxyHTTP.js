@@ -50,8 +50,8 @@ var log = function (context, err, code){
   
   if (data){
     console.log(data);
-    if ('conf' in context) fs.appendFileSync(conf[context.conf].logFile, data+"\n");
-    else fs.appendFileSync("ProxyHTTP.log", data+"\n"); //change the name of the proxy log file inside the code
+    if (logFile) fs.appendFileSync(logFile, data+"\n");
+    //else fs.appendFileSync("ProxyHTTP.log", data+"\n"); //change the name of the proxy log file inside the code
   };
 };
 
