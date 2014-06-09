@@ -199,6 +199,10 @@ var proxyWork = function(context, callback){
    /*if (context.options.method!='PUT' && context.options.method!='POST') {
      delete context.options.headers['content-length'];
    }*/
+   if (!context.req.readable) {
+     if (context.options.body && typeof context.options.body =='string') context.options.headers['content-length']=context.options.body.length;
+     else delete context.options.headers['content-length'];
+   }
    var proxyReq = http.request(context.options, function (res){
     if (res.headers.location && conf[context.conf].rewritePath.enable){
       var splitHeaders = res.headers.location.split('/');
@@ -246,6 +250,7 @@ var proxyWork = function(context, callback){
     proxyReq.end();
   });
   } else {
+    if (context.options.body) proxyReq.write(context.options.body);
     proxyReq.end();
   }
 }
