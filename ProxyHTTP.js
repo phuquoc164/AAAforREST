@@ -89,27 +89,35 @@ var flush = function(id, server){
 // LDAP bind with HTTP basic authentication
 
 var loginLDAP = function (context, callback) {
+  var negativeCacheTime=(conf[context.conf].ldap.negativeCacheTime || 300) /* 5 minutes*/ * 1000 /*ms*/;
+  var positiveCacheTime=(conf[context.conf].ldap.positiveCacheTime || 900) /* 15 minutes*/ * 1000 /*ms*/;
+
   var url=conf[context.conf].ldap.url;
   var ldapReq=conf[context.conf].ldap.id+ context.login +','+conf[context.conf].ldap.cn; //do not manage more than one dc information
   var id=crypto.createHash('sha1').update(url).update(ldapReq).update(context.pw).digest('hex');
   console.log("logging in "+ldapReq+" into "+url);
   if (!servLDAP[url] || !servLDAP[url][id]){
 
+  if (!servLDAP[url]) {
+      servLDAP[url] ={};
+  }
+  if (!(id in servLDAP[url])) {
+    servLDAP[url][id]={};
+  }
+
   var serveursLDAP=ldap.createClient({
     'url' : url
   });
 
   serveursLDAP.bind(ldapReq, context.pw, function(err) {
+    if ("timeOut" in servLDAP[url][id]) {
+      clearTimeout(servLDAP[url][id].timeOut);
+    }
+
+    servLDAP[url][id].err = err;
+    servLDAP[url][id].timeOut=setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
+    console.log(servLDAP);
     if (!err) {
-      if (!servLDAP[url]) {
-	  servLDAP[url] ={};
-      }
-      if (!servLDAP[url][id]) {
-        servLDAP[url][id] = setTimeout(flush, 600000, id, url);
-      } else {
-        console.log("skipping timeout flush, already done");
-      }
-      console.log(servLDAP);
       serveursLDAP.unbind(function () {
         callback(err);
       });
@@ -118,8 +126,9 @@ var loginLDAP = function (context, callback) {
     }
   });
   }else{
-    console.log("reuse existing credentials");
-    callback();
+    console.log("reuse existing credentials "+id);
+    console.log(servLDAP[url]);
+    callback(servLDAP[url][id].err);
   }
 }
 
