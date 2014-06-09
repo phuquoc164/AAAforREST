@@ -123,7 +123,9 @@ var loginLDAP = function (context, callback) {
   }
 }
 
-var authentifyLDAP =function (context, callback){
+var authentifyLDAP =function (context, callback, callbackOnError){
+
+  callbackOnError=callbackOnError || false;
 
   context.restricted = true;
 
@@ -138,9 +140,13 @@ var authentifyLDAP =function (context, callback){
 	    callback(err);
  	  } else {
 	    console.log("LDAP error : " + JSON.stringify(err));
-	    log(context, err, 0);
-	    context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-	    sendResponse(context,401);
+	    if (!callbackOnError) {
+	      log(context, err, 0);
+	      context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+	      sendResponse(context,401);
+	    } else {
+	      callback(err);
+	    }
 	  }
       });
   }
