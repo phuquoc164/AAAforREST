@@ -95,6 +95,17 @@ var loginLDAP = function (context, callback) {
   var url=conf[context.conf].ldap.url;
   var ldapReq=conf[context.conf].ldap.id+ context.login +','+conf[context.conf].ldap.cn; //do not manage more than one dc information
   var id=crypto.createHash('sha1').update(url).update(ldapReq).update(context.pw).digest('hex');
+  var login=context.login;
+  if (typeof conf[context.conf].ldap.domain != "undefined") {
+    var domain= conf[context.conf].ldap.domain;
+    if (domain && typeof domain == "string") {
+      domain=conf[context.conf].ldap.domain;
+    } else {
+      domain=require("url").parse(url).host;
+    }
+    if (domain)
+      login=context.login+"@"+domain;
+  }
   if (!servLDAP[url] || !servLDAP[url][id]){
     console.log("logging in "+ldapReq+" into "+url);
 
@@ -118,6 +129,7 @@ var loginLDAP = function (context, callback) {
       servLDAP[url][id].timeOut=setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
       if (!err) {
 	console.log("authentified!");
+	context.login=login;
 	serveursLDAP.unbind(function () {
 	  callback(err);
 	});
@@ -127,7 +139,12 @@ var loginLDAP = function (context, callback) {
       }
     });
   }else{
+    if (!servLDAP[url][id].err) context.login=login;
     callback(servLDAP[url][id].err);
+  }
+
+  function setLogin(context) {
+    
   }
 }
 
