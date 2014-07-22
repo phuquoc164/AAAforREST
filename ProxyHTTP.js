@@ -95,39 +95,38 @@ var loginLDAP = function (context, callback) {
   var url=conf[context.conf].ldap.url;
   var ldapReq=conf[context.conf].ldap.id+ context.login +','+conf[context.conf].ldap.cn; //do not manage more than one dc information
   var id=crypto.createHash('sha1').update(url).update(ldapReq).update(context.pw).digest('hex');
-  console.log("logging in "+ldapReq+" into "+url);
   if (!servLDAP[url] || !servLDAP[url][id]){
+    console.log("logging in "+ldapReq+" into "+url);
 
-  if (!servLDAP[url]) {
-      servLDAP[url] ={};
-  }
-  if (!(id in servLDAP[url])) {
-    servLDAP[url][id]={};
-  }
-
-  var serveursLDAP=ldap.createClient({
-    'url' : url
-  });
-
-  serveursLDAP.bind(ldapReq, context.pw, function(err) {
-    if ("timeOut" in servLDAP[url][id]) {
-      clearTimeout(servLDAP[url][id].timeOut);
+    if (!servLDAP[url]) {
+	servLDAP[url] ={};
+    }
+    if (!(id in servLDAP[url])) {
+      servLDAP[url][id]={};
     }
 
-    servLDAP[url][id].err = err;
-    servLDAP[url][id].timeOut=setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
-    console.log(servLDAP);
-    if (!err) {
-      serveursLDAP.unbind(function () {
-        callback(err);
-      });
-    } else {
-      callback(err);
-    }
-  });
+    var serveursLDAP=ldap.createClient({
+      'url' : url
+    });
+
+    serveursLDAP.bind(ldapReq, context.pw, function(err) {
+      if ("timeOut" in servLDAP[url][id]) {
+	clearTimeout(servLDAP[url][id].timeOut);
+      }
+
+      servLDAP[url][id].err = err;
+      servLDAP[url][id].timeOut=setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
+      if (!err) {
+	console.log("authentified!");
+	serveursLDAP.unbind(function () {
+	  callback(err);
+	});
+      } else {
+	console.log("LDAP error : " + JSON.stringify(err));
+	callback(err);
+      }
+    });
   }else{
-    console.log("reuse existing credentials "+id);
-    console.log(servLDAP[url]);
     callback(servLDAP[url][id].err);
   }
 }
@@ -145,10 +144,8 @@ var authentifyLDAP =function (context, callback, callbackOnError){
 
       loginLDAP( context, function(err) {
 	  if (!err) {
-	    console.log("authentified!");
 	    callback(err);
  	  } else {
-	    console.log("LDAP error : " + JSON.stringify(err));
 	    if (!callbackOnError) {
 	      log(context, err, 0);
 	      context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -204,10 +201,6 @@ function couchDBHeaders(nodeHeaders) {
 // Main proxy function that forward the request and the related answers
 
 var proxyWork = function(context, callback){
-   console.log("proxying request...");
-   /*if (context.options.method!='PUT' && context.options.method!='POST') {
-     delete context.options.headers['content-length'];
-   }*/
    if (!context.req.readable) {
      if (context.options.body && typeof context.options.body =='string') context.options.headers['content-length']=context.options.body.length;
      else delete context.options.headers['content-length'];
@@ -348,7 +341,6 @@ http.createServer(function (request, response){
     var i=0;
     var found=false;
     while(i<conf[index].rules.length && !found){
-      console.log("testing rule "+i+" of conf "+index);
       try {
 	var control=conf[index].rules[i].control;
 	var action=conf[index].rules[i].action;
@@ -356,7 +348,6 @@ http.createServer(function (request, response){
 	if(isFunction(control)) test=control(context);
 	else if (typeof control == "string") test=eval(control);
 	if (test) {
-          console.log("test passed!");
 	  context.ruleNo=i;
 	  if (isFunction(action)){
 	    action(context);
@@ -366,7 +357,6 @@ http.createServer(function (request, response){
 	  if (conf[index].rules[i].final) {
 	    found = true;
 	  }
-	  console.log(found?"last one":"go on testing");
 	}
       } catch(e) {
 	console.log(e.stack);
