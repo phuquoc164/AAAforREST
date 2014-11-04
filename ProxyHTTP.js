@@ -5,23 +5,13 @@ var url = require('url');
 var crypto = require ('crypto');
 
 function isFunction(fun) { return typeof fun == "function";}
-var conf={};
 
-if (fs.existsSync('config.js')) {
-  conf = require("./config");
-  var servers=conf.servers;
-  var port=conf.port;
-  conf=servers;
-}
-if (fs.existsSync('config.json')) {
-  // Reading of the main configuration file : config.json
-  conf = JSON.parse(
-    fs.readFileSync('config.json', 'utf8')
-  );
-  var port=1337;
-}
+var configuration =
+  fs.existsSync('config.js')? require('./config')
+  : fs.existsSync('config.json')? JSON.parse(fs.readFileSync('config.json', 'utf8'))
+  : {};
 
-if (!conf || !port) {
+if (!configuration.sites || !configuration.port) {
   console.log("please configure the reverse Proxy correctly");
   process.exit(1);
 }
@@ -33,8 +23,8 @@ var log = function (context, err, code){
   var rule='??';
   var logFile="ProxyHTTP.log";
   if ('conf' in context) {
-    var thisConf=conf[context.conf];
-    if ('logFile' in thisConf) logFile=thisConf.logFile;
+    var site = configuration.sites[context.conf];
+    if ('logFile' in site) logFile = site.logFile;
     rule=context.conf+'/';
     if ('ruleNo' in context) {
       rule+=context.ruleNo;
@@ -65,7 +55,8 @@ var authentifyDummy =function (context, callback){
     context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
     sendResponse(context,401);
   }else{
-    if(context.login === conf[context.conf].authData.login && context.pw === conf[context.conf].authData.pw){
+    var site_auth = configuration.sites[context.conf].authData;
+    if (context.login === site_auth.login && context.pw === site_auth.pw) {
       callback();
     }else{
       context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -89,17 +80,18 @@ var flush = function(id, server){
 // LDAP bind with HTTP basic authentication
 
 var loginLDAP = function (context, callback) {
-  var negativeCacheTime=(conf[context.conf].ldap.negativeCacheTime || 300) /* 5 minutes*/ * 1000 /*ms*/;
-  var positiveCacheTime=(conf[context.conf].ldap.positiveCacheTime || 900) /* 15 minutes*/ * 1000 /*ms*/;
+  var site_ldap = configuration.sites[context.conf].ldap;
+  var negativeCacheTime = (site_ldap.negativeCacheTime || 300) /* 5 minutes*/ * 1000 /*ms*/;
+  var positiveCacheTime = (site_ldap.positiveCacheTime || 900) /* 15 minutes*/ * 1000 /*ms*/;
 
-  var url=conf[context.conf].ldap.url;
-  var ldapReq=conf[context.conf].ldap.id+ context.login +','+conf[context.conf].ldap.cn; //do not manage more than one dc information
+  var url = site_ldap.url;
+  var ldapReq = site_ldap.id + context.login + ',' + site_ldap.cn; //do not manage more than one dc information
   var id=crypto.createHash('sha1').update(url).update(ldapReq).update(context.pw).digest('hex');
   var login=context.login;
-  if (typeof conf[context.conf].ldap.domain != "undefined") {
-    var domain= conf[context.conf].ldap.domain;
+  if (typeof site_ldap.domain != "undefined") {
+    var domain = site_ldap.domain;
     if (domain && typeof domain == "string") {
-      domain=conf[context.conf].ldap.domain;
+      domain = site_ldap.domain;
     } else {
       domain=require("url").parse(url).host;
     }
@@ -187,11 +179,10 @@ var AuthorizList =function (context, callback){
   context.restricted = true;
 
   var idDoc = context.req.url.split('/')[3];
-  if(conf[context.conf].restricted[idDoc]){
-    if (conf[context.conf].restricted[idDoc].indexOf(context.login) == -1){
-      sendResponse(context,403,"Forbidden");
-    } else callback();
-  }else{
+  var allowed_users = configuration.sites[context.conf].restricted[idDoc];
+  if (allowed_users && allowed_users.indexOf(context.login) == -1) {
+    sendResponse(context, 403, 'Forbidden');
+  } else {
     callback();
   }
 }
@@ -223,10 +214,11 @@ var proxyWork = function(context, callback){
      else delete context.options.headers['content-length'];
    }
    var proxyReq = http.request(context.options, function (res){
-    if (res.headers.location && conf[context.conf].rewritePath.enable){
+  var site = configuration.sites[context.conf];
+  if (res.headers.location && site.rewritePath.enable){
       var splitHeaders = res.headers.location.split('/');
       res.headers.location = context.req.headers.origin;
-      for (var i = (3 + conf[context.conf].rewritePath.headersOffset); i < splitHeaders.length; i++) {
+      for (var i = (3 + sites.rewritePath.headersOffset); i < splitHeaders.length; i++) {
         res.headers.location = res.headers.location +'/'+ splitHeaders[i];
       }
     }
@@ -234,7 +226,7 @@ var proxyWork = function(context, callback){
     var headers=res.headers;
     if ('rawHeaders' in res) { //this is true for node.js >=0.11.6
       headers=res.rawHeaders;
-    } else if (conf[context.conf].couchDBCompat) {
+    } else if (site.couchDBCompat) {
       headers=couchDBHeaders(headers);
     }
 
@@ -279,11 +271,12 @@ var proxyWork = function(context, callback){
 var matching = function(host){ 
   var verif = false;
   var i =0;
-  while ((verif == false) && (i < conf.length)){
-    var re = new RegExp(conf[i].hostProxy, "i");
+  while ((verif == false) && (i < configuration.sites.length)){
+    var site_host = configuration.sites[i].hostProxy;
+    var re = new RegExp(site_host, "i");
     verif = re.test(host);
     if (!verif) {
-      var re = new RegExp(conf[i].hostProxy+":"+port, "i");
+      re = new RegExp(site.host + ":" + port, "i");
       verif = re.test(host);
     }
     if (verif == false)i++;
@@ -333,15 +326,15 @@ http.createServer(function (request, response){
     sendResponse(context,404,"Not Found");
   }else{
   	context.conf = index;
-    
+    var site = configuration.sites[index];
     var head = JSON.parse(JSON.stringify(request.headers)); 
-    if (request.headers.authorization && conf[index].hideAuth) delete head.authorization;
-    if (!conf[index].preserveHost) delete head.host;
+    if (request.headers.authorization && site.hideAuth) delete head.authorization;
+    if (!site.preserveHost) delete head.host;
     
     var options = {
-      'host': conf[index].host,
-      'port': conf[index].port, 
-      'path': conf[index].path + url.parse(request.url).path,
+      host: site.host,
+      port: site.port,
+      path: site.path + url.parse(request.url).path,
       'method': request.method,
       'headers': head,
       'agent': false
@@ -357,10 +350,11 @@ http.createServer(function (request, response){
 
     var i=0;
     var found=false;
-    while(i<conf[index].rules.length && !found){
+    while(i<site.rules.length && !found){
       try {
-	var control=conf[index].rules[i].control;
-	var action=conf[index].rules[i].action;
+        var rule = site.rules[i];
+        var control = rule.control;
+        var action = rule.action;
 	var test=false;
 	if(isFunction(control)) test=control(context);
 	else if (typeof control == "string") test=eval(control);
@@ -371,7 +365,7 @@ http.createServer(function (request, response){
 	  } else {
 	    eval(action);
 	  }
-	  if (conf[index].rules[i].final) {
+	  if (rule.final) {
 	    found = true;
 	  }
 	}
@@ -387,5 +381,5 @@ http.createServer(function (request, response){
     }
   }
   });
-}).listen(port); // port has to be changed directly inside the code. 
-console.log('Server running port '+port);
+}).listen(configuration.port);
+console.log('Server running port ' + configuration.port);

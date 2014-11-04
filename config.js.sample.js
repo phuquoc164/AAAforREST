@@ -1,6 +1,6 @@
 module.exports={
 'port':1337,
-'servers':[
+'sites':[
   {
     "hostProxy" : "acme.com", // name of the virtual server
 	"host": "tex.avery.org", // name of the physical server

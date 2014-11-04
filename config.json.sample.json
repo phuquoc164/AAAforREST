@@ -1,8 +1,8 @@
 
 Remove all commentaries inside this configuration file before use the proxy !!!!!!! 
-
-[
-  {
+{
+  "port": 1337,
+  "sites": [{
     "hostProxy" : "acme.com", // name of the virtual server
   	"host": "://tex.avery.org", // name of the physical server
   	"port": 7777, // port number of the physical server
@@ -61,4 +61,4 @@ Remove all commentaries inside this configuration file before use the proxy !!!!
           "final": true
         }]
   }
-]
+]}
