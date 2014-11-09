@@ -177,7 +177,7 @@ var matching = function(host){
     var re = new RegExp(site_host, "i");
     verif = re.test(host);
     if (!verif) {
-      re = new RegExp(site.host + ":" + port, "i");
+      re = new RegExp(site_host + ":" + configuration.port, "i");
       verif = re.test(host);
     }
     if (verif == false)i++;
