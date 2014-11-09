@@ -109,7 +109,7 @@ function couchDBHeaders(nodeHeaders) {
 
 // Main proxy function that forward the request and the related answers
 
-var proxyWork = function(context, callback){
+var proxyWork = function(context) {
    if (!context.req.readable) {
      if (context.options.body && typeof context.options.body =='string') context.options.headers['content-length']=context.options.body.length;
      else delete context.options.headers['content-length'];
@@ -138,7 +138,6 @@ var proxyWork = function(context, callback){
     });
     res.on('end', function(){
       context.res.end();
-      isFunction(callback) && callback();
     });
   });
 
