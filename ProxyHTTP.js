@@ -11,15 +11,15 @@ function tryAgain(context) {
   context.res.statusCode = 401;
   context.res.end();
   log(context, 'HTTP', 401);
-};
+}
 
 /*
  * Default implementation of checkCredentials (with fixed login and password)
  * that can be replaced for various authentication formats and protocols.
  */
 var dummy = function(context, callback) {
-    var site_auth = configuration.sites[context.conf].authData;
-    callback(context.login==site_auth.login && context.pw==site_auth.pw);
+  var site_auth = configuration.sites[context.conf].authData;
+  callback(context.login==site_auth.login && context.pw==site_auth.pw);
 }
 
 function authenticate(checkCredentials, context, callback, shouldNotCatch) {
@@ -38,7 +38,7 @@ function authenticate(checkCredentials, context, callback, shouldNotCatch) {
 
 function sendResponse(context,statusCode,message) {
   context.res.statusCode = statusCode;
-  log(context, "HTTP", statusCode);
+  log(context, 'HTTP', statusCode);
   context.res.end(message);
 }
 
@@ -99,7 +99,7 @@ var proxyWork = function(context) {
     }
 
     context.res.writeHead(res.statusCode, headers);
-    log(context, "HTTP", res.statusCode);
+    log(context, 'HTTP', res.statusCode);
     res.on('data',function(chunkOrigin) {
         context.res.write(chunkOrigin);
     });
@@ -147,7 +147,7 @@ var matching = function(host){
       verif = re.test(host);
     }
     if (verif == false)i++;
-  };
+  }
   if (verif == false ) i = -1;
   return i;
 };
