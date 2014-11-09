@@ -8,9 +8,7 @@ function isFunction(fun) { return typeof fun == "function";}
 
 function tryAgain(context) {
   context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-  context.res.statusCode = 401;
-  context.res.end();
-  log(context, 'HTTP', 401);
+  sendResponse(context, 401, '');
 }
 
 /*
@@ -36,7 +34,7 @@ function authenticate(checkCredentials, context, callback, shouldNotCatch) {
   }
 }
 
-function sendResponse(context,statusCode,message) {
+function sendResponse(context, statusCode, message) {
   context.res.statusCode = statusCode;
   log(context, 'HTTP', statusCode);
   context.res.end(message);
@@ -110,7 +108,7 @@ var proxyWork = function(context) {
 
   proxyReq.on('error', function(err){
     console.log('problem with the server: ' + JSON.stringify(err));
-    sendResponse(context,504,"Gateway Timeout");
+    sendResponse(context, 504, "Gateway Timeout");
   });
 
   if (context.req.readable) {
@@ -183,13 +181,13 @@ http.createServer(function (request, response){
     console.log("BIG UNCAUGHT EXCEPTION");
     console.log(err);
     console.log(err.stack);
-    sendResponse(context,500,"Server Exception ");
+    sendResponse(context, 500, "Server Exception");
   });
   domain.on("error",function(err) {
     console.log("BIG ERROR");
     console.log(err);
     console.log(err.stack);
-    sendResponse(context,500,"Server Error ");
+    sendResponse(context, 500, "Server Error");
   });
 
   domain.add(request);
@@ -199,7 +197,7 @@ http.createServer(function (request, response){
 
   var index = matching(request.headers.host);
   if(index == -1){
-    sendResponse(context,404,"Not Found");
+    sendResponse(context, 404, "Not Found");
   }else{
   	context.conf = index;
     var site = configuration.sites[index];
@@ -237,9 +235,9 @@ http.createServer(function (request, response){
 	  }
 	}
       } catch(e) {
-	console.log(e.stack);
-	sendResponse(context,500,"Server Exception "+index+"/"+i);
-	found=true;
+        console.log(e.stack);
+        sendResponse(context, 500, "Server Exception " + index + "/" + i);
+        found = true;
       }
       i++;
     }
