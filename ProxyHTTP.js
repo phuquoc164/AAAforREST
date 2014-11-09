@@ -190,9 +190,9 @@ var matching = function(host){
 
 http.createServer(function (request, response){
   var context = {
-    "req": request,
-    "res": response,
-    "date": new Date(),
+    req: request,
+    res: response,
+    date: new Date(),
     log: log,
     sendResponse: sendResponse,
     proxyWork: proxyWork,
@@ -230,18 +230,14 @@ http.createServer(function (request, response){
     var head = JSON.parse(JSON.stringify(request.headers)); 
     if (request.headers.authorization && site.hideAuth) delete head.authorization;
     if (!site.preserveHost) delete head.host;
-    
-    var options = {
+    context.options = {
       host: site.host,
       port: site.port,
       path: site.path + url.parse(request.url).path,
-      'method': request.method,
-      'headers': head,
-      'agent': false
+      method: request.method,
+      headers: head,
+      agent: false
     };
-
-    context.options = options;
-
     if (request.headers.authorization){
       context.auth = request.headers.authorization.split(" ")[1];
       context.login = new Buffer(context.auth, 'base64').toString().split(':')[0];
