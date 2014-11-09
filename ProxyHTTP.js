@@ -1,20 +1,10 @@
 var http = require('http');
 var fs = require('fs');
-var ldap = require('ldapjs');
 var url = require('url');
-var crypto = require ('crypto');
+var configuration = require('./configuration');
+var ldap = require('./authenticator.ldap');
 
 function isFunction(fun) { return typeof fun == "function";}
-
-var configuration =
-  fs.existsSync('config.js')? require('./config')
-  : fs.existsSync('config.json')? JSON.parse(fs.readFileSync('config.json', 'utf8'))
-  : {};
-
-if (!configuration.sites || !configuration.port) {
-  console.log("please configure the reverse Proxy correctly");
-  process.exit(1);
-}
 
 // Function that write the log inside the file related to right server
 
@@ -45,135 +35,46 @@ var log = function (context, err, code){
   };
 };
 
-// Test function for basic http authentication with a fixed login/password defined in config.json
-
-var authentifyDummy =function (context, callback){
-  
-  context.restricted = true;
-
-  if(!context.req.headers.authorization){
-    context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-    sendResponse(context,401);
-  }else{
-    var site_auth = configuration.sites[context.conf].authData;
-    if (context.login === site_auth.login && context.pw === site_auth.pw) {
-      callback();
-    }else{
-      context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-      sendResponse(context,401);
-    }
-  }
-}
-
-// Cache of recent LDAP bind informations
-
-var servLDAP = {};
-
-// Function that remove old cached informations about LDAP bind
-
-var flush = function(id, server){
-  console.log("flushing ldap auth "+id+" from server "+server);
-  delete servLDAP[server][id];
-  if (servLDAP[server] === {}) delete servLDAP[server];
+function tryAgain(context) {
+  context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+  context.res.statusCode = 401;
+  context.res.end();
+  log(context, 'HTTP', 401);
 };
 
-// LDAP bind with HTTP basic authentication
-
-var loginLDAP = function (context, callback) {
-  var site_ldap = configuration.sites[context.conf].ldap;
-  var negativeCacheTime = (site_ldap.negativeCacheTime || 300) /* 5 minutes*/ * 1000 /*ms*/;
-  var positiveCacheTime = (site_ldap.positiveCacheTime || 900) /* 15 minutes*/ * 1000 /*ms*/;
-
-  var url = site_ldap.url;
-  var ldapReq = site_ldap.id + context.login + ',' + site_ldap.cn; //do not manage more than one dc information
-  var id=crypto.createHash('sha1').update(url).update(ldapReq).update(context.pw).digest('hex');
-  var login=context.login;
-  if (typeof site_ldap.domain != "undefined") {
-    var domain = site_ldap.domain;
-    if (domain && typeof domain == "string") {
-      domain = site_ldap.domain;
-    } else {
-      domain=require("url").parse(url).host;
-    }
-    if (domain)
-      login=context.login+"@"+domain;
-  }
-  if (!servLDAP[url] || !servLDAP[url][id]){
-    console.log("logging in "+ldapReq+" into "+url);
-
-    if (!servLDAP[url]) {
-	servLDAP[url] ={};
-    }
-    if (!(id in servLDAP[url])) {
-      servLDAP[url][id]={};
-    }
-
-    var serveursLDAP=ldap.createClient({
-      'url' : url
-    });
-
-    serveursLDAP.bind(ldapReq, context.pw, function(err) {
-      if ("timeOut" in servLDAP[url][id]) {
-	clearTimeout(servLDAP[url][id].timeOut);
-      }
-
-      servLDAP[url][id].err = err;
-      servLDAP[url][id].timeOut=setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
-      if (!err) {
-	console.log("authentified!");
-	context.login=login;
-	serveursLDAP.unbind(function () {
-	  callback(err);
-	});
-      } else {
-	console.log("LDAP error : " + JSON.stringify(err));
-	callback(err);
-      }
-    });
-  }else{
-    if (!servLDAP[url][id].err) context.login=login;
-    callback(servLDAP[url][id].err);
-  }
-
-  function setLogin(context) {
-    
-  }
+/*
+ * Default implementation of checkCredentials (with fixed login and password)
+ * that can be replaced for various authentication formats and protocols.
+ */
+var dummy = function(context, callback) {
+    var site_auth = configuration.sites[context.conf].authData;
+    callback(context.login==site_auth.login && context.pw==site_auth.pw);
 }
 
-var authentifyLDAP =function (context, callback, callbackOnError){
-
-  callbackOnError=callbackOnError || false;
-
+function authenticate(checkCredentials, context, callback, shouldNotCatch) {
   context.restricted = true;
-
-  if(!context.req.headers.authorization){
-    context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-    sendResponse(context,401);
-  }else{
-
-      loginLDAP( context, function(err) {
-	  if (!err) {
-	    callback(err);
- 	  } else {
-	    if (!callbackOnError) {
-	      log(context, err, 0);
-	      context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-	      sendResponse(context,401);
-	    } else {
-	      callback(err);
-	    }
-	  }
-      });
+  if (context.req.headers.authorization) {
+    checkCredentials(context, function(isAuthentified) {
+      if (isAuthentified || shouldNotCatch) {
+        callback(context);
+      } else {
+        tryAgain(context);
+      }
+    });
+  } else {
+    tryAgain(context);
   }
 }
 
-var sendResponse=function(context,statusCode,message) {
+function sendResponse(context,statusCode,message) {
   context.res.statusCode = statusCode;
   log(context, "HTTP", statusCode);
   context.res.end(message);
 }
-// Function that manage the authorization to access to specific resources defined inside config.json
 
+/**
+ * Authorize access to specific resources.
+ */
 var AuthorizList =function (context, callback){
 
   context.restricted = true;
@@ -296,9 +197,8 @@ http.createServer(function (request, response){
     sendResponse: sendResponse,
     proxyWork: proxyWork,
     AuthorizList: AuthorizList,
-    authentifyLDAP: authentifyLDAP,
-    loginLDAP: loginLDAP,
-    authentifyDummy: authentifyDummy,
+    ldap: ldap,
+    dummy: dummy,
     couchDBHeaders: couchDBHeaders
   };
 

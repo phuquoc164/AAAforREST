@@ -29,7 +29,7 @@ Remove all commentaries inside this configuration file before use the proxy !!!!
 
     "rules":[    { // list rules that define the proxy behaviours for this server
           "control": "request.method != 'GET'", // define when this rules is trigged
-          "action": "authentifyLDAP(context, function(){AuthorizList(context, function(){proxyWork(context, function(){});});});", // what the proxy has to do
+          "action": "authenticate(ldap, context, function(){AuthorizList(context, function(){proxyWork(context, function(){});});});", // what the proxy has to do
           "final": true // define if the proxy has to search for other relevents rules
           },{
           "control": "true",
@@ -53,7 +53,7 @@ Remove all commentaries inside this configuration file before use the proxy !!!!
     },
     "rules": [{
           "control": "request.method != 'GET'",
-          "action": "authentifyDummy(context, function(){proxyWork(context, function(){});});",
+          "action": "authenticate(dummy, context, function(){proxyWork(context, function(){});});",
           "final": true
           },{
           "control": "true",

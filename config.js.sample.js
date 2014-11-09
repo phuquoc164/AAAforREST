@@ -1,7 +1,6 @@
 module.exports={
 'port':1337,
-'sites':[
-  {
+'sites':[{
     "hostProxy" : "acme.com", // name of the virtual server
 	"host": "tex.avery.org", // name of the physical server
 	"port": 7777, // port number of the physical server
@@ -30,13 +29,13 @@ module.exports={
           "control": function(context){ // define when this rules is trigged
 	    return context.req.method != 'GET';
 	  },
-          "action": function(context) { // what the proxy has to do
-	    context.authentifyLDAP(context, function(){
-	      context.AuthorizList(context, function(){
-	        context.proxyWork(context)
-	      ;})
-	    ;})
-	  },
+    action: function(context) { // what the proxy has to do
+	    authenticate(ldap, context, function() {
+	      AuthorizList(context, function() {
+	        proxyWork(context);
+	      });
+	    })
+    },
           "final": true // define if the proxy has to search for other relevents rules
           }]
   },
@@ -56,11 +55,11 @@ module.exports={
     },
     "rules": [{
           "control": "request.method != 'GET'",
-          "action": function(context) {
-	    context.authentifyDummy(context, function(){
-	      context.proxyWork(context);
-	    });
-	  },
+    action: function(context) {
+      authenticate(dummy, context, function() {
+	      proxyWork(context);
+      });
+    },
           "final": true
           }]
   }
