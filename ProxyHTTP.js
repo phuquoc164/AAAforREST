@@ -1,39 +1,10 @@
 var http = require('http');
-var fs = require('fs');
 var url = require('url');
 var configuration = require('./configuration');
 var ldap = require('./authenticator.ldap');
+var log = require('./accounter.log');
 
 function isFunction(fun) { return typeof fun == "function";}
-
-// Function that write the log inside the file related to right server
-
-var log = function (context, err, code){
-  var remoteIP=context.req.headers["x-forwarded-for"] || context.req.connection.remoteAddress;;
-  var rule='??';
-  var logFile="ProxyHTTP.log";
-  if ('conf' in context) {
-    var site = configuration.sites[context.conf];
-    if ('logFile' in site) logFile = site.logFile;
-    rule=context.conf+'/';
-    if ('ruleNo' in context) {
-      rule+=context.ruleNo;
-    } else {
-      rule+='##';
-    }
-  }
-  rule='['+rule+']';
-    if (err == "HTTP" && context.login)var data = "" + context.date + "\t" + remoteIP + "\t" + context.login + "\t" + context.req.method + "\t" + context.req.url + "\t" + code +"\t"+rule;
-
-    else if (context.restricted) var data = "" + context.date + "\t" + remoteIP + "\t" + err;
-    else if (err == "HTTP")var data = "" + context.date + "\t" + remoteIP + "\t" + context.req.method + "\t" + context.req.headers.host + context.req.url + "\t" + code +"\t"+rule;
-  
-  if (data){
-    console.log(data);
-    if (logFile) fs.appendFileSync(logFile, data+"\n");
-    //else fs.appendFileSync("ProxyHTTP.log", data+"\n"); //change the name of the proxy log file inside the code
-  };
-};
 
 function tryAgain(context) {
   context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -52,7 +23,6 @@ var dummy = function(context, callback) {
 }
 
 function authenticate(checkCredentials, context, callback, shouldNotCatch) {
-  context.restricted = true;
   if (context.req.headers.authorization) {
     checkCredentials(context, function(isAuthentified) {
       if (isAuthentified || shouldNotCatch) {
@@ -76,9 +46,6 @@ function sendResponse(context,statusCode,message) {
  * Authorize access to specific resources.
  */
 var AuthorizList =function (context, callback){
-
-  context.restricted = true;
-
   var idDoc = context.req.url.split('/')[3];
   var allowed_users = configuration.sites[context.conf].restricted[idDoc];
   if (allowed_users && allowed_users.indexOf(context.login) == -1) {
