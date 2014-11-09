@@ -186,7 +186,17 @@ var matching = function(host){
   return i;
 };
 
-// Main HTTP server
+function parseHttpCredentials(context) {
+  var authorization = context.req.headers.authorization;
+  if (authorization) {
+    var token = authorization.split(" ");
+    if (token[0]=='Basic') {
+      var credentials = new Buffer(token[1], 'base64').toString().split(':');
+      context.login = credentials[0];
+      context.pw = credentials[1];
+    }
+  }
+}
 
 http.createServer(function (request, response){
   var context = {
@@ -238,12 +248,7 @@ http.createServer(function (request, response){
       headers: head,
       agent: false
     };
-    if (request.headers.authorization){
-      context.auth = request.headers.authorization.split(" ")[1];
-      context.login = new Buffer(context.auth, 'base64').toString().split(':')[0];
-      context.pw = new Buffer(context.auth, 'base64').toString().split(':')[1];
-    };
-
+    parseHttpCredentials(context);
     var i=0;
     var found=false;
     while(i<site.rules.length && !found){
