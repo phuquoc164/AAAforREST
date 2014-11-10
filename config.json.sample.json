@@ -29,7 +29,7 @@ Remove all commentaries inside this configuration file before use the proxy !!!!
 
     "rules":[    { // list rules that define the proxy behaviours for this server
           "control": "request.method != 'GET'", // define when this rules is trigged
-          "action": "authenticate(ldap, context, function(){AuthorizList(context, function(){proxyWork(context);});});", // what the proxy has to do
+          "action": "authenticate([ldap], context, function(){AuthorizList(context, function(){proxyWork(context);});});", // what the proxy has to do
           "final": true // define if the proxy has to search for other relevents rules
           },{
           "control": "true",
@@ -47,13 +47,18 @@ Remove all commentaries inside this configuration file before use the proxy !!!!
       "headersOffset":0
       },
     "hideAuth":true,
+    "ldap": {
+      "url": "ldap://ldap.acme.com",
+      "id": "cn=",
+      "cn": "dc=acme,dc=com"
+    },
     "authData": { // information for the dummy authentication
           "login": "roadrunner",
           "pw": "bipbip"
     },
     "rules": [{
           "control": "request.method != 'GET'",
-          "action": "authenticate(dummy, context, function(){proxyWork(context);});",
+          "action": "authenticate([ldap,dummy], context, function(){proxyWork(context);});",
           "final": true
           },{
           "control": "true",

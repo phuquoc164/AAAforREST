@@ -13,7 +13,8 @@
   },
   "main":"ProxyHTTP.js",
   "dependencies":{
-    "ldapjs":">=0.7.x"
+    "ldapjs":">=0.7.x",
+    "async":">=0.9.x"
   },
   "engine":">= node 0.8.0",
   "private":true

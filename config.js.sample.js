@@ -30,7 +30,7 @@ module.exports={
 	    return context.req.method != 'GET';
 	  },
     action: function(context) { // what the proxy has to do
-	    authenticate(ldap, context, function() {
+	    authenticate([ldap], context, function() {
 	      AuthorizList(context, function() {
 	        proxyWork(context);
 	      });
@@ -49,6 +49,11 @@ module.exports={
       "headersOffset":0
       },
     "hideAuth":true,
+    ldap: {
+      url: "ldap://ldap.acme.com",
+      id: "cn=",
+      cn: "dc=acme,dc=com"
+    },
     "authData": { // information for the dummy authentication
           "login": "roadrunner",
           "pw": "bipbip"
@@ -56,7 +61,7 @@ module.exports={
     "rules": [{
           "control": "request.method != 'GET'",
     action: function(context) {
-      authenticate(dummy, context, function() {
+      authenticate([ldap, dummy], context, function() {
 	      proxyWork(context);
       });
     },

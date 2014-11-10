@@ -1,5 +1,6 @@
 var http = require('http');
 var url = require('url');
+var async = require('async');
 var configuration = require('./configuration');
 var ldap = require('./authenticator.ldap');
 var log = require('./accounter.log');
@@ -20,9 +21,11 @@ var dummy = function(context, callback) {
   callback(context.login==site_auth.login && context.pw==site_auth.pw);
 }
 
-function authenticate(checkCredentials, context, callback, shouldNotCatch) {
+function authenticate(authenticators, context, callback, shouldNotCatch) {
   if (context.req.headers.authorization) {
-    checkCredentials(context, function(isAuthentified) {
+    async.detectSeries(authenticators, function(authenticator, callback) {
+      authenticator(context, callback);
+    }, function(isAuthentified) {
       if (isAuthentified || shouldNotCatch) {
         callback(context);
       } else {
