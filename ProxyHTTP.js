@@ -16,15 +16,19 @@ function tryAgain(context) {
  * Default implementation of checkCredentials (with fixed login and password)
  * that can be replaced for various authentication formats and protocols.
  */
-var dummy = function(context, callback) {
-  var site_auth = configuration.sites[context.conf].authData;
-  callback(context.login==site_auth.login && context.pw==site_auth.pw);
+var dummy = function(context, settings, callback) {
+  callback(context.login==settings.login && context.pw==settings.password);
 }
 
-function authenticate(authenticators, context, callback, shouldNotCatch) {
+function authenticate(context, callback, shouldNotCatch) {
   if (context.req.headers.authorization) {
+    var authenticators = configuration.sites[context.conf].authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
-      authenticator(context, callback);
+      if (authenticator.dn) {
+        ldap(context, authenticator, callback);
+      } else {
+        dummy(context, authenticator, callback);
+      }
     }, function(isAuthentified) {
       if (isAuthentified || shouldNotCatch) {
         callback(context);

@@ -12,11 +12,9 @@ module.exports={
       "headersOffset":0 // also remove "part" of the path information (a part is the string between two '/')
       },
     "hideAuth":true, // hide the authentication information inside the http headers of the request
-    "ldap": { // LDAP server information
-      "url": "ldap://ldap.acme.com",
-      "id":"cn=", // how the user id is define in the request
-      "cn":"dc=acme,dc=com" // other entries in the request
-    },
+    authentication: [
+      {url: "ldap://ldap.acme.com", id: "cn", dn: "dc=acme,dc=com"}
+    ],
     "restricted": { // information about resources with restricted access
       "rocket": ["will.coyote"], // "name_of_the_resource_inside_the_url": ["list", "of", "authorized", "users", "id"],
       "magnet": ["will.coyote"],
@@ -30,7 +28,7 @@ module.exports={
 	    return context.req.method != 'GET';
 	  },
     action: function(context) { // what the proxy has to do
-	    authenticate([ldap], context, function() {
+	    authenticate(context, function() {
 	      AuthorizList(context, function() {
 	        proxyWork(context);
 	      });
@@ -49,22 +47,17 @@ module.exports={
       "headersOffset":0
       },
     "hideAuth":true,
-    ldap: {
-      url: "ldap://ldap.acme.com",
-      id: "cn=",
-      cn: "dc=acme,dc=com"
-    },
-    "authData": { // information for the dummy authentication
-          "login": "roadrunner",
-          "pw": "bipbip"
-    },
+    authentication: [
+      {url: "ldap://ldap.acme.com", id: "cn", dn: "dc=acme,dc=com"},
+      {login: "roadrunner", password: "bipbip"}
+    ],
     "rules": [{
           "control": "request.method != 'GET'",
-    action: function(context) {
-      authenticate([ldap, dummy], context, function() {
-	      proxyWork(context);
-      });
-    },
+      action: function(context) {
+        authenticate(context, function() {
+          proxyWork(context);
+        });
+      },
           "final": true
           }]
   }

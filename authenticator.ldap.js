@@ -1,6 +1,5 @@
 module.exports = function() {
 
-  var configuration = require('./configuration');
   var LDAP = require('ldapjs');
   var CRYPTO = require ('crypto');
   var URL = require('url');
@@ -13,21 +12,19 @@ module.exports = function() {
     if (cache[server] === {}) delete cache[server];
   };
 
-  return function(context, callback) {
-    var site_ldap = configuration.sites[context.conf].ldap;
-    var negativeCacheTime = (site_ldap.negativeCacheTime || 300) /* 5 minutes*/ * 1000 /*ms*/;
-    var positiveCacheTime = (site_ldap.positiveCacheTime || 900) /* 15 minutes*/ * 1000 /*ms*/;
-
-    var url = site_ldap.url;
-    var ldapReq = site_ldap.id + context.login + ',' + site_ldap.cn; //do not manage more than one dc information
+  return function(context, settings, callback) {
+    var negativeCacheTime = (settings.negativeCacheTime || 300) /* 5 minutes*/ * 1000 /*ms*/;
+    var positiveCacheTime = (settings.positiveCacheTime || 900) /* 15 minutes*/ * 1000 /*ms*/;
+    var url = settings.url;
+    var ldapReq = settings.id + '=' + context.login + ',' + settings.dn; //do not manage more than one dc information
     var id = CRYPTO.createHash('sha1')
       .update(url).update(ldapReq).update(context.pw)
       .digest('hex');
     var login = context.login;
-    if (typeof site_ldap.domain != 'undefined') {
-      var domain = site_ldap.domain;
+    if (typeof settings.domain != 'undefined') {
+      var domain = settings.domain;
       if (domain && typeof domain == 'string') {
-        domain = site_ldap.domain;
+        domain = settings.domain;
       } else {
         domain = URL.parse(url).host;
       }
