@@ -6,7 +6,7 @@ module.exports = function() {
   return function(context, err, code) {
     var request = context.req;
     var site = configuration.sites[context.conf];
-    var logFile = (site && site.logFile)? site.logFile : 'aaaForREST.log';
+    var logFile = (site && site.logFile)? site.logFile : 'log/misc.log';
     var data = context.date.toISOString() 
       + '\t' + (context.login? context.login + '@' : '')
       + (request.headers['x-forwarded-for'] || request.connection.remoteAddress)
