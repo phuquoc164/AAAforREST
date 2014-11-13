@@ -24,18 +24,18 @@ Installation procedure
 
         git clone https://github.com/Hypertopic/AAAforREST.git
         cd AAAforREST
-        npm install ldapjs
-        npm install async
+        npm install
+        cp config.sample.js config.js
 
 * Change settings in `config.js`.
 * Test the settings (`sudo` is required for port 80):
 
-        sudo node ProxyHTTP.js
+        sudo node proxy.js
 
 * Exit the program (`CTRL`+`C`) and start it as a service:
 
-        sudo forever start ProxyHTTP.js
+        sudo forever start proxy.js
 
 * The service can be stopped with:
 
-        sudo forever stop ProxyHTTP.js
+        sudo forever stop proxy.js
