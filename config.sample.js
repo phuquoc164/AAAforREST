@@ -11,12 +11,10 @@ module.exports = {
 	"port": 7777, // port number of the physical server
 	"path": "", // additional path information to access the physical server
     "logFile": "acme.log", // name of the log file
-    "couchDBCompat":false, //if the proxy is used for CouchDB replication add nodejs version < 0.11.6
     "rewritePath": { // rewrite the hostProxy name inside the answer headers
       "enable":true,
       "headersOffset":0 // also remove "part" of the path information (a part is the string between two '/')
       },
-    "hideAuth":true, // hide the authentication information inside the http headers of the request
     authentication: [
       {url: "ldap://ldap.acme.com", id: "cn", dn: "dc=acme,dc=com"}
     ],
@@ -51,7 +49,6 @@ module.exports = {
       "enable":true,
       "headersOffset":0
       },
-    "hideAuth":true,
     authentication: [
       {url: "ldap://ldap.acme.com", id: "cn", dn: "dc=acme,dc=com"},
       {login: "roadrunner", password: "bipbip"}

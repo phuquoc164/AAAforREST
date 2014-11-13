@@ -71,7 +71,8 @@ function uCaseHeader(headerName) {
   return headerName.replace(/\w*/g,uCaseWord);
 }
 
-function couchDBHeaders(nodeHeaders) {
+//TODO replace with `.rawHeaders` when Node.js stable version is 0.11
+function preserveHeadersCase(nodeHeaders) {
   var couchHeaders={};
   for (var i in nodeHeaders) {
     couchHeaders[uCaseHeader(i)]=nodeHeaders[i];
@@ -95,15 +96,10 @@ var proxyWork = function(context) {
         responseIn.headers.location += '/' + splitHeaders[i];
       }
     }
-
-    var headers = responseIn.headers;
-    if ('rawHeaders' in responseIn) { //this is true for node.js >=0.11.6
-      headers = responseIn.rawHeaders;
-    } else if (site.couchDBCompat) {
-      headers=couchDBHeaders(headers);
-    }
-
-    context.responseOut.writeHead(responseIn.statusCode, headers);
+    context.responseOut.writeHead(
+      responseIn.statusCode,
+      preserveHeadersCase(responseIn.headers)
+    );
     log(context, 'HTTP', responseIn.statusCode);
     responseIn.on('data', function(chunkOrigin) {
       context.responseOut.write(chunkOrigin);
@@ -179,8 +175,7 @@ http.createServer(function(requestIn, responseOut) {
     proxyWork: proxyWork,
     AuthorizList: AuthorizList,
     ldap: ldap,
-    dummy: dummy,
-    couchDBHeaders: couchDBHeaders
+    dummy: dummy
   };
 
   var domain=require("domain").create();
@@ -208,17 +203,15 @@ http.createServer(function(requestIn, responseOut) {
   }else{
   	context.conf = index;
     var site = configuration.sites[index];
-    var head = JSON.parse(JSON.stringify(requestIn.headers));
-    if (requestIn.headers.authorization && site.hideAuth) delete head.authorization;
-    if (!site.preserveHost) delete head.host;
     context.options = {
       host: site.host,
       port: site.port,
       path: site.path + url.parse(requestIn.url).path,
       method: requestIn.method,
-      headers: head,
+      headers: preserveHeadersCase(requestIn.headers),
       agent: false
     };
+    if (!site.preserveCredentials) delete context.options.headers.Authorization;
     parseHttpCredentials(context);
     var i=0;
     var found=false;
