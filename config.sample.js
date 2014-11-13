@@ -30,7 +30,7 @@ module.exports = {
 
     "rules":[    { // list rules that define the proxy behaviours for this server
           "control": function(context){ // define when this rules is trigged
-	    return context.req.method != 'GET';
+	      return context.requestIn.method != 'GET';
 	  },
     action: function(context) { // what the proxy has to do
 	    authenticate(context, function() {
@@ -57,7 +57,7 @@ module.exports = {
       {login: "roadrunner", password: "bipbip"}
     ],
     "rules": [{
-          "control": "request.method != 'GET'",
+      control: "requestIn.method != 'GET'",
       action: function(context) {
         authenticate(context, function() {
           proxyWork(context);

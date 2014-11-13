@@ -8,7 +8,7 @@ var log = require('./accounter.log');
 function isFunction(fun) { return typeof fun == "function";}
 
 function tryAgain(context) {
-  context.res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+  context.responseOut.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
   sendResponse(context, 401, '');
 }
 
@@ -21,7 +21,7 @@ var dummy = function(context, settings, callback) {
 }
 
 function authenticate(context, callback, shouldNotCatch) {
-  if (context.req.headers.authorization) {
+  if (context.requestIn.headers.authorization) {
     var authenticators = configuration.sites[context.conf].authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
       if (authenticator.dn) {
@@ -42,16 +42,16 @@ function authenticate(context, callback, shouldNotCatch) {
 }
 
 function sendResponse(context, statusCode, message) {
-  context.res.statusCode = statusCode;
+  context.responseOut.statusCode = statusCode;
   log(context, 'HTTP', statusCode);
-  context.res.end(message);
+  context.responseOut.end(message);
 }
 
 /**
  * Authorize access to specific resources.
  */
 var AuthorizList =function (context, callback){
-  var idDoc = context.req.url.split('/')[3];
+  var idDoc = context.requestIn.url.split('/')[3];
   var allowed_users = configuration.sites[context.conf].restricted[idDoc];
   if (allowed_users && allowed_users.indexOf(context.login) == -1) {
     sendResponse(context, 403, 'Forbidden');
@@ -82,59 +82,59 @@ function couchDBHeaders(nodeHeaders) {
 // Main proxy function that forward the request and the related answers
 
 var proxyWork = function(context) {
-   if (!context.req.readable) {
+   if (!context.requestIn.readable) {
      if (context.options.body && typeof context.options.body =='string') context.options.headers['content-length']=context.options.body.length;
      else delete context.options.headers['content-length'];
    }
-   var proxyReq = http.request(context.options, function (res){
+  var requestOut = http.request(context.options, function(responseIn) {
   var site = configuration.sites[context.conf];
-  if (res.headers.location && site.rewritePath.enable){
-      var splitHeaders = res.headers.location.split('/');
-      res.headers.location = context.req.headers.origin;
+  if (responseIn.headers.location && site.rewritePath.enable) {
+      var splitHeaders = responseIn.headers.location.split('/');
+      responseIn.headers.location = context.requestIn.headers.origin;
       for (var i = (3 + sites.rewritePath.headersOffset); i < splitHeaders.length; i++) {
-        res.headers.location = res.headers.location +'/'+ splitHeaders[i];
+        responseIn.headers.location += '/' + splitHeaders[i];
       }
     }
 
-    var headers=res.headers;
-    if ('rawHeaders' in res) { //this is true for node.js >=0.11.6
-      headers=res.rawHeaders;
+    var headers = responseIn.headers;
+    if ('rawHeaders' in responseIn) { //this is true for node.js >=0.11.6
+      headers = responseIn.rawHeaders;
     } else if (site.couchDBCompat) {
       headers=couchDBHeaders(headers);
     }
 
-    context.res.writeHead(res.statusCode, headers);
-    log(context, 'HTTP', res.statusCode);
-    res.on('data',function(chunkOrigin) {
-        context.res.write(chunkOrigin);
+    context.responseOut.writeHead(responseIn.statusCode, headers);
+    log(context, 'HTTP', responseIn.statusCode);
+    responseIn.on('data', function(chunkOrigin) {
+      context.responseOut.write(chunkOrigin);
     });
-    res.on('end', function(){
-      context.res.end();
+    responseIn.on('end', function() {
+      context.responseOut.end();
     });
   });
 
-  proxyReq.on('error', function(err){
+  requestOut.on('error', function(err){
     console.log('problem with the server: ' + JSON.stringify(err));
     sendResponse(context, 504, "Gateway Timeout");
   });
 
-  if (context.req.readable) {
+  if (context.requestIn.readable) {
 
-  context.req.on('data', function(chunkInit){
-    proxyReq.write(chunkInit)
+  context.requestIn.on('data', function(chunkInit) {
+    requestOut.write(chunkInit)
   });
 
-  context.req.on('error', function(err) {
+  context.requestIn.on('error', function(err) {
     log(context, err, 0);
     console.log('problem with request: ' + err.message);
   });
 
-  context.req.on('end', function(){
-    proxyReq.end();
+  context.requestIn.on('end', function(){
+    requestOut.end();
   });
   } else {
-    if (context.options.body) proxyReq.write(context.options.body);
-    proxyReq.end();
+    if (context.options.body) requestOut.write(context.options.body);
+    requestOut.end();
   }
 }
 
@@ -158,7 +158,7 @@ var matching = function(host){
 };
 
 function parseHttpCredentials(context) {
-  var authorization = context.req.headers.authorization;
+  var authorization = context.requestIn.headers.authorization;
   if (authorization) {
     var token = authorization.split(" ");
     if (token[0]=='Basic') {
@@ -169,10 +169,10 @@ function parseHttpCredentials(context) {
   }
 }
 
-http.createServer(function (request, response){
+http.createServer(function(requestIn, responseOut) {
   var context = {
-    req: request,
-    res: response,
+    requestIn: requestIn,
+    responseOut: responseOut,
     date: new Date(),
     log: log,
     sendResponse: sendResponse,
@@ -197,25 +197,25 @@ http.createServer(function (request, response){
     sendResponse(context, 500, "Server Error");
   });
 
-  domain.add(request);
-  domain.add(response);
+  domain.add(requestIn);
+  domain.add(responseOut);
 
   domain.run(function() {
 
-  var index = matching(request.headers.host);
+  var index = matching(requestIn.headers.host);
   if(index == -1){
     sendResponse(context, 404, "Not Found");
   }else{
   	context.conf = index;
     var site = configuration.sites[index];
-    var head = JSON.parse(JSON.stringify(request.headers)); 
-    if (request.headers.authorization && site.hideAuth) delete head.authorization;
+    var head = JSON.parse(JSON.stringify(requestIn.headers));
+    if (requestIn.headers.authorization && site.hideAuth) delete head.authorization;
     if (!site.preserveHost) delete head.host;
     context.options = {
       host: site.host,
       port: site.port,
-      path: site.path + url.parse(request.url).path,
-      method: request.method,
+      path: site.path + url.parse(requestIn.url).path,
+      method: requestIn.method,
       headers: head,
       agent: false
     };

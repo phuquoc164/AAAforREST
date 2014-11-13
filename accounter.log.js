@@ -4,7 +4,7 @@ module.exports = function() {
   var configuration = require('./configuration');
 
   return function(context, err, code) {
-    var request = context.req;
+    var request = context.requestIn;
     var site = configuration.sites[context.conf];
     var logFile = (site && site.logFile)? site.logFile : 'log/misc.log';
     var data = context.date.toISOString() 
