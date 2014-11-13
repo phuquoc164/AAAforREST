@@ -1,26 +1,41 @@
-ProxyHTTP
-=========
+AAAforREST
+==========
 
-A HTTP proxy with basic authentication and authorization management
+An HTTP reverse proxy to bring authentication, authorization and accounting to RESTful applications (see "[features](https://github.com/Hypertopic/AAAforREST/issues?q=)").
 
-Description
+License: [BSD revised](http://opensource.org/licenses/BSD-3-Clause)
+
+Contact: aurelien.benel@utt.fr
+
+Home page: https://github.com/Hypertopic/AAAforREST
+
+Installation requirements
 -------------------------
 
-Simple HTTP proxy in node.js
+* Git client
+* [Node.js](http://nodejs.org/)
 
-The proxy is divide into two file:
-
-* ProxyHTTP.js which provide the basic functions of the proxy
-
-* config.json in which the use define the configuration for its proxy
-
-Program requirement 
+Installation procedure
 ----------------------
 
-* Install node.js and the package ldapjs (npm install)
+    sudo npm install forever -g
 
-* Create a config.json without comments or config.js with comments
+* In any folder:
 
-* Modify the port number inside ProxyHTTP.js 
+    git clone https://github.com/Hypertopic/AAAforREST.git
+    cd AAAforREST
+    npm install ldapjs
+    npm install async
 
-* Start ProxyHTTP.js  ( # node ProxyHTTP.js)
+* Change settings in `config.js`.
+* Test the settings (`sudo` is required for port 80):
+
+    sudo node ProxyHTTP.js
+
+* Exit the program (`CTRL`+`C`) and start it as a service:
+
+    sudo forever start ProxyHTTP.js
+
+* The service can be stopped with:
+
+    sudo forever stop ProxyHTTP.js
