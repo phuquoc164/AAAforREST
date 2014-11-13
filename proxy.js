@@ -205,8 +205,8 @@ http.createServer(function(requestIn, responseOut) {
     var site = configuration.sites[index];
     context.options = {
       host: site.host,
-      port: site.port,
-      path: site.path + url.parse(requestIn.url).path,
+      port: site.port || 80,
+      path: (site.path || '') + url.parse(requestIn.url).path,
       method: requestIn.method,
       headers: preserveHeadersCase(requestIn.headers),
       agent: false

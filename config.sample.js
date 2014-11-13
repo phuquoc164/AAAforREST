@@ -8,7 +8,7 @@ module.exports = {
   /**
    * Port number of the reverse proxy.
    */
-  port: 80,
+  //port: 80,
 
   sites: [{
 
@@ -27,17 +27,17 @@ module.exports = {
     /**
      * Port number of the upstream server.
      */
-    port: 80,
+    //port: 80,
 
     /**
      * Base path of the upstream server.
      */
-    path: '/',
+    //path: '',
 
     /**
      * Path of the site log file.
      */
-    logFile: "log/misc.log",
+    //logFile: "log/misc.log",
 
     /**
      * Location rewriting settings
