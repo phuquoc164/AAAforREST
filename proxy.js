@@ -214,10 +214,14 @@ http.createServer(function(requestIn, responseOut) {
     var found = false;
     while (!found && i<site.rules.length) {
       var rule = site.rules[i];
-      if (act(context, rule.control)) {
-        context.ruleNo = i;
-        act(context, rule.action);
-        found = true;
+      try {
+        if (act(context, rule.control)) {
+          found = true;
+          act(context, rule.action);
+        }
+      } catch (e) {
+        console.log(e + '. RULE ' + site.hostProxy + ' #' + i);
+        sendResponse(context, 500, 'Configuration error');
       }
       i++;
     }
