@@ -82,10 +82,16 @@ module.exports = {
       "ammo": ["elmer.fudd"]
     },
 
+    /**
+     * Rules defining the `action` to be taken
+     * when `control` is true.
+     * Note: A fallback rule is always on. It is defined as:
+     * `control: "true"` and `action: "proxyWork(context)"`.
+     */
     rules: [{
       control: function(context) {
-	      return context.requestIn.method != 'GET';
-	    },
+        return context.requestIn.method != 'GET';
+      },
       action: function(context) {
         authenticate(context, function() {
           AuthorizList(context, function() {
@@ -93,10 +99,6 @@ module.exports = {
           });
         })
       },
-      final: true
-    }, {
-      control: "true",
-      action: "proxyWork(context);",
       final: true
     }]
   }]
