@@ -35,6 +35,11 @@ module.exports = {
     //path: '',
 
     /**
+     * Should HTTP credentials be handled by the upstream server?
+     */
+    //preserveCredentials: false,
+
+    /**
      * Path of the site log file.
      */
     //logFile: "log/misc.log",
