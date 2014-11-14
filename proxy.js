@@ -221,7 +221,7 @@ http.createServer(function(requestIn, responseOut) {
       }
       i++;
     }
-    proxyWork(context); //Fallback rule
+    if (!found) proxyWork(context); //Fallback rule
   }
   });
 }).listen(configuration.port);
