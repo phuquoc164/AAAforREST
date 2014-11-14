@@ -5,7 +5,11 @@ var configuration = require('./configuration');
 var ldap = require('./authenticator.ldap');
 var log = require('./accounter.log');
 
-function isFunction(fun) { return typeof fun == "function";}
+function act(context, toDo) {
+  var method = context.requestIn.method,
+    path = url.parse(context.requestIn.url).path;
+  return typeof toDo == 'function' && toDo(context) || eval(toDo);
+}
 
 function tryAgain(context) {
   context.responseOut.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
@@ -169,15 +173,8 @@ http.createServer(function(requestIn, responseOut) {
   var context = {
     requestIn: requestIn,
     responseOut: responseOut,
-    date: new Date(),
-    log: log,
-    sendResponse: sendResponse,
-    proxyWork: proxyWork,
-    AuthorizList: AuthorizList,
-    ldap: ldap,
-    dummy: dummy
+    date: new Date()
   };
-
   var domain=require("domain").create();
   domain.on("uncaughtException",function(err) {
     console.log("BIG UNCAUGHT EXCEPTION");
@@ -213,30 +210,13 @@ http.createServer(function(requestIn, responseOut) {
     };
     if (!site.preserveCredentials) delete context.options.headers.Authorization;
     parseHttpCredentials(context);
-    var i=0;
-    var found=false;
-    while(i<site.rules.length && !found){
-      try {
-        var rule = site.rules[i];
-        var control = rule.control;
-        var action = rule.action;
-	var test=false;
-	if(isFunction(control)) test=control(context);
-	else if (typeof control == "string") test=eval(control);
-	if (test) {
-	  context.ruleNo=i;
-	  if (isFunction(action)){
-	    action(context);
-	  } else {
-	    eval(action);
-	  }
-	  if (rule.final) {
-	    found = true;
-	  }
-	}
-      } catch(e) {
-        console.log(e.stack);
-        sendResponse(context, 500, "Server Exception " + index + "/" + i);
+    var i = 0;
+    var found = false;
+    while (!found && i<site.rules.length) {
+      var rule = site.rules[i];
+      if (act(context, rule.control)) {
+        context.ruleNo = i;
+        act(context, rule.action);
         found = true;
       }
       i++;

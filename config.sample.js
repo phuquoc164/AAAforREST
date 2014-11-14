@@ -90,7 +90,7 @@ module.exports = {
      */
     rules: [{
       control: function(context) {
-        return context.requestIn.method != 'GET';
+        return method != 'GET';
       },
       action: function(context) {
         authenticate(context, function() {
@@ -98,8 +98,7 @@ module.exports = {
             proxyWork(context);
           });
         })
-      },
-      final: true
+      }
     }]
   }]
 };
