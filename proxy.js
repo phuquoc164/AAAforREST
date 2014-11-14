@@ -52,12 +52,17 @@ function sendResponse(context, statusCode, message) {
 }
 
 /**
- * Authorize access to specific resources.
+ * Authorize access to restricted resources.
  */
-var AuthorizList =function (context, callback){
-  var idDoc = context.requestIn.url.split('/')[3];
-  var allowed_users = configuration.sites[context.conf].restricted[idDoc];
-  if (allowed_users && allowed_users.indexOf(context.login) == -1) {
+var authorize = function(context, callback) {
+  var acl = configuration.sites[context.conf].restricted;
+  var resourceMatch, userMatch;
+  for (var uriPart in acl) {
+    resourceMatch = context.requestIn.url.indexOf(uriPart) > -1;
+    userMatch =  acl[uriPart].indexOf(context.login) > -1;
+    if (resourceMatch) break;
+  }
+  if (resourceMatch && !userMatch) {
     tryAgain(context);
   } else {
     callback();

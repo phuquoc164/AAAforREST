@@ -87,7 +87,7 @@ module.exports = {
       },
       action: function(context) {
         authenticate(context, function() {
-          AuthorizList(context, function() {
+          authorize(context, function() {
             proxyWork(context);
           });
         })
