@@ -199,7 +199,7 @@ http.createServer(function(requestIn, responseOut) {
   	context.conf = index;
     var site = configuration.sites[index];
     context.options = {
-      host: site.host,
+      host: site.host || 'localhost',
       port: site.port || 80,
       path: (site.path || '') + url.parse(requestIn.url).path,
       method: requestIn.method,

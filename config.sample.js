@@ -22,7 +22,7 @@ module.exports = {
     /**
      * Hostname of the upstream server.
      */
-    host: "tex.avery.org",
+    //host: "localhost",
 
     /**
      * Port number of the upstream server.
