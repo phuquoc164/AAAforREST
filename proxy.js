@@ -92,13 +92,11 @@ var proxyWork = function(context) {
      else delete context.options.headers['content-length'];
    }
   var requestOut = http.request(context.options, function(responseIn) {
-  var site = configuration.sites[context.conf];
-  if (responseIn.headers.location && site.rewritePath.enable) {
-      var splitHeaders = responseIn.headers.location.split('/');
-      responseIn.headers.location = context.requestIn.headers.origin;
-      for (var i = (3 + site.rewritePath.headersOffset); i < splitHeaders.length; i++) {
-        responseIn.headers.location += '/' + splitHeaders[i];
-      }
+    var site = configuration.sites[context.conf];
+    if (responseIn.headers.location && site.hideLocationParts) {
+      var locationParts = responseIn.headers.location.split('/');
+      locationParts.splice(3, site.hideLocationParts);
+      responseIn.headers.location = locationParts.join('/');
     }
     context.responseOut.writeHead(
       responseIn.statusCode,

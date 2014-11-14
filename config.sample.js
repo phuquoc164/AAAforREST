@@ -45,16 +45,9 @@ module.exports = {
     //logFile: "log/misc.log",
 
     /**
-     * Location rewriting settings
+     * Number of URI segments to remove from the Location header.
      */
-    rewritePath: {
-      enable: true,
-
-      /**
-       * URI segments to remove from the Location header.
-       */
-      headersOffset: 0
-    },
+    //hideLocationParts: 0,
 
     authentication: [
 
