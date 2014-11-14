@@ -9,7 +9,7 @@ function isFunction(fun) { return typeof fun == "function";}
 
 function tryAgain(context) {
   context.responseOut.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-  sendResponse(context, 401, '');
+  sendResponse(context, 401, 'Unauthorized');
 }
 
 /*
@@ -54,7 +54,7 @@ var AuthorizList =function (context, callback){
   var idDoc = context.requestIn.url.split('/')[3];
   var allowed_users = configuration.sites[context.conf].restricted[idDoc];
   if (allowed_users && allowed_users.indexOf(context.login) == -1) {
-    sendResponse(context, 403, 'Forbidden');
+    tryAgain(context);
   } else {
     callback();
   }
