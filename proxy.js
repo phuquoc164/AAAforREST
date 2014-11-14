@@ -92,7 +92,7 @@ var proxyWork = function(context) {
   if (responseIn.headers.location && site.rewritePath.enable) {
       var splitHeaders = responseIn.headers.location.split('/');
       responseIn.headers.location = context.requestIn.headers.origin;
-      for (var i = (3 + sites.rewritePath.headersOffset); i < splitHeaders.length; i++) {
+      for (var i = (3 + site.rewritePath.headersOffset); i < splitHeaders.length; i++) {
         responseIn.headers.location += '/' + splitHeaders[i];
       }
     }
