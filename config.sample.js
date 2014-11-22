@@ -40,11 +40,6 @@ module.exports = {
     //preserveCredentials: false,
 
     /**
-     * Path of the site log file.
-     */
-    //logFile: "log/misc.log",
-
-    /**
      * Number of URI segments to remove from the Location header.
      */
     //hideLocationParts: 0,
