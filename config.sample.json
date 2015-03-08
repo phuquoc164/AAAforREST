@@ -1,0 +1,21 @@
+{
+  "sites": [{
+    "hostProxy": "shop.acme.com",
+    "authentication": [
+      {"url": "ldap://ldap.acme.org", "id": "cn", "dn": "dc=acme,dc=org"},
+      {"url": "ldap://ldap.acme.com", "id": "uid", "dn": "ou=People,dc=acme,dc=com"},
+      {"login": "roadrunner", "password": "bipbip"}
+    ],
+    "restricted": {
+      "rocket": ["will.coyote"],
+      "magnet": ["will.coyote"],
+      "false hole": ["will.coyote"],
+      "rifle": ["elmer.fudd"],
+      "ammo": ["elmer.fudd"]
+    },
+    "rules": [{
+      "control": "method != 'GET'"
+      "action": "authenticate(context,function(){authorize(context,function(){proxyWork(context)})})"
+    }]
+  }]
+}

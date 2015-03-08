@@ -50,7 +50,7 @@ module.exports = {
        * LDAP binding settings.
        */
       {url: "ldap://ldap.acme.org", id: "cn", dn: "dc=acme,dc=org"},
-      {url: "ldap://ldap.acme.com", id: "uid", dn: "dc=acme,dc=com"},
+      {url: "ldap://ldap.acme.com", id: "uid", dn: "ou=People,dc=acme,dc=com"},
 
       /**
        * Fixed credentials.
