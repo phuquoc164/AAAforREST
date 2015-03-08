@@ -8,7 +8,16 @@ var log = require('./accounter.log');
 function act(context, toDo) {
   var method = context.requestIn.method,
     path = url.parse(context.requestIn.url).path;
-  return typeof toDo == 'function' && toDo(context) || eval(toDo);
+  var scope = {
+    method: method,
+    path: path,
+    authenticate: authenticate,
+    authorize: authorize,
+    proxyWork: proxyWork,
+    sendResponse: sendResponse,
+    context: context
+  };
+  return typeof toDo == 'function' && toDo.call(scope) || eval(toDo);
 }
 
 function tryAgain(context) {
@@ -54,7 +63,7 @@ function sendResponse(context, statusCode, message) {
 /**
  * Authorize access to restricted resources.
  */
-var authorize = function(context, callback) {
+function authorize(context, callback) {
   var acl = configuration.sites[context.conf].restricted;
   var resourceMatch, userMatch;
   for (var uriPart in acl) {
@@ -91,7 +100,7 @@ function preserveHeadersCase(nodeHeaders) {
 
 // Main proxy function that forward the request and the related answers
 
-var proxyWork = function(context) {
+function proxyWork(context) {
    if (!context.requestIn.readable) {
      if (context.options.body && typeof context.options.body =='string') context.options.headers['content-length']=context.options.body.length;
      else delete context.options.headers['content-length'];

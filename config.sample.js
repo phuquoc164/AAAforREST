@@ -77,13 +77,14 @@ module.exports = {
      * `control: "true"` and `action: "proxyWork(context)"`.
      */
     rules: [{
-      control: function(context) {
-        return method != 'GET';
+      control: function() {
+        return this.method != 'GET';
       },
-      action: function(context) {
-        authenticate(context, function() {
-          authorize(context, function() {
-            proxyWork(context);
+      action: function() {
+        var $ = this;
+        $.authenticate($.context, function() {
+          $.authorize($.context, function() {
+            $.proxyWork($.context);
           });
         })
       }
