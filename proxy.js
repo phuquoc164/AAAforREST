@@ -31,7 +31,7 @@ function tryAgain(context) {
  */
 var dummy = function(context, settings, callback) {
   callback(context.login==settings.login && context.pw==settings.password);
-}
+};
 
 function authenticate(context, callback, shouldNotCatch) {
   if (context.requestIn.headers.authorization) {
@@ -133,7 +133,7 @@ function proxyWork(context) {
   if (context.requestIn.readable) {
 
   context.requestIn.on('data', function(chunkInit) {
-    requestOut.write(chunkInit)
+    requestOut.write(chunkInit);
   });
 
   context.requestIn.on('error', function(err) {

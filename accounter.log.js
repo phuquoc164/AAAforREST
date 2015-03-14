@@ -12,7 +12,7 @@ module.exports = function() {
     });
   }
   configuration.sites.forEach(function(site) {
-    addLogger(site.hostProxy)
+    addLogger(site.hostProxy);
   });
   addLogger('misc');
 

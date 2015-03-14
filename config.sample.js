@@ -86,7 +86,7 @@ module.exports = {
           $.authorize($.context, function() {
             $.proxyWork($.context);
           });
-        })
+        });
       }
     }]
   }]

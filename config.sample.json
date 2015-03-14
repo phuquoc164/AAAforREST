@@ -14,7 +14,7 @@
       "ammo": ["elmer.fudd"]
     },
     "rules": [{
-      "control": "method != 'GET'"
+      "control": "method != 'GET'",
       "action": "authenticate(context,function(){authorize(context,function(){proxyWork(context)})})"
     }]
   }]
