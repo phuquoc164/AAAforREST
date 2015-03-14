@@ -227,7 +227,7 @@ http.createServer(function(requestIn, responseOut) {
     while (!found && i<site.rules.length) {
       var rule = site.rules[i];
       try {
-        if (act(context, rule.control)) {
+        if (act(context, rule.control)===true) {
           found = true;
           act(context, rule.action);
         }
