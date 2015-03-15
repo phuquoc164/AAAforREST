@@ -1,22 +1,10 @@
 {
-  "name": "ProxyHTTP",
-  "description": "HTTP reverse proxy with basic authentication and authorization management",
-  "tags": [
-    "proxy",
-    "http",
-    "ldap"
-  ],
-  "version": "0.1.0",
-  "author": {
-    "name": "Frédéric Merle",
-    "email": "merlefre@github.com"
-  },
-  "main":"ProxyHTTP.js",
-  "dependencies":{
-    "ldapjs":">=0.7.x",
-    "winston":">=0.8.x",
-    "async":">=0.9.x"
-  },
-  "engine":">= node 0.8.0",
-  "private":true
+  "name": "AAAforREST",
+  "description": "An HTTP reverse proxy to bring authentication, authorization and accounting to RESTful applications",
+  "version": "1.20150315",
+  "dependencies": {
+    "ldapjs": ">=0.7.x",
+    "winston": ">=0.8.x",
+    "async": ">=0.9.x"
+  }
 }
