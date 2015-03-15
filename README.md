@@ -26,17 +26,17 @@ Installation procedure
         cd AAAforREST
         npm install
         mkdir log
-        cp config.sample.js config.js
+        cp conf/config.sample.js conf/config.js
 
 * Change settings in `config.js`.
 * Test the settings (`sudo` is required for port 80):
 
-        sudo node proxy.js
+        sudo node app/proxy.js
 
 * Exit the program (`CTRL`+`C`) and start it as a service:
 
-        sudo forever start proxy.js
+        sudo forever start app/proxy.js
 
 * The service can be stopped with:
 
-        sudo forever stop proxy.js
+        sudo forever stop app/proxy.js
