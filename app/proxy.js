@@ -148,6 +148,11 @@ function proxyWork(context) {
     if (context.options.body) requestOut.write(context.options.body);
     requestOut.end();
   }
+
+  context.responseOut.on('close', function() {
+    requestOut.abort();
+    requestOut.socket.end();
+  });
 }
 
 // Function that allow to find the index of the requested server inside config.json
