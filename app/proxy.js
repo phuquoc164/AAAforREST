@@ -42,8 +42,11 @@ function authenticate(context, callback, shouldNotCatch) {
       } else {
         dummy(context, authenticator, callback);
       }
-    }, function(isAuthentified) {
-      if (isAuthentified || shouldNotCatch) {
+    }, function(successfulAuthenticator) {
+      if (successfulAuthenticator || shouldNotCatch) {
+        if (!successfulAuthenticator.preserveCredentials) {
+          delete context.requestIn.headers.authorization;
+        }
         callback(context);
       } else {
         tryAgain(context);
