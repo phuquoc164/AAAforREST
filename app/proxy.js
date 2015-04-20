@@ -181,10 +181,10 @@ function parseHttpCredentials(context) {
   var authorization = context.requestIn.headers.authorization;
   if (authorization) {
     var token = authorization.split(" ");
-    if (token[0]=='Basic') {
+    if (token[0]=='Basic' && token.length>1) {
       var credentials = new Buffer(token[1], 'base64').toString().split(':');
       context.login = credentials[0];
-      context.pw = credentials[1];
+      context.pw = credentials.length>1 ? credentials[1] : "";
     }
   }
 }
