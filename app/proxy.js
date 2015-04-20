@@ -3,7 +3,27 @@ var url = require('url');
 var async = require('async');
 var configuration = require('./configuration');
 var ldap = require('./authenticator.ldap');
+var cookie = require('./authenticator.cookie').check;
 var log = require('./accounter.log');
+var session = require('./session');
+
+configuration.sites.forEach(session.manage);
+
+
+function readBody(context,callback) {
+  if (context.requestIn.readable) {
+    var body="";
+    context.requestIn.on('data',function(chunk) {
+      body+=chunk;
+    });
+    context.requestIn.on('end',function() {
+      context.body=body;
+      callback(body);
+    });
+  } else {
+    callback(context.body);
+  }
+}
 
 function act(context, toDo) {
   var method = context.requestIn.method,
@@ -14,6 +34,7 @@ function act(context, toDo) {
     authenticate: authenticate,
     authorize: authorize,
     proxyWork: proxyWork,
+    readBody: readBody,
     sendResponse: sendResponse,
     context: context
   };
@@ -30,31 +51,29 @@ function tryAgain(context) {
  * that can be replaced for various authentication formats and protocols.
  */
 var dummy = function(context, settings, callback) {
-  callback(context.login==settings.login && context.pw==settings.password);
+  callback(context.login && context.login==settings.login && context.pw==settings.password);
 };
 
 function authenticate(context, callback, shouldNotCatch) {
-  if (context.requestIn.headers.authorization) {
     var authenticators = configuration.sites[context.conf].authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
       if (authenticator.dn) {
         ldap(context, authenticator, callback);
+      } else if (authenticator.hasOwnProperty("cookieName")) {
+        cookie(context, authenticator, callback);
       } else {
         dummy(context, authenticator, callback);
       }
     }, function(successfulAuthenticator) {
-      if (successfulAuthenticator || shouldNotCatch) {
+      if (successfulAuthenticator) {
         if (!successfulAuthenticator.preserveCredentials) {
           delete context.requestIn.headers.authorization;
         }
-        callback(context);
+        callback(successfulAuthenticator);
       } else {
-        tryAgain(context);
+        shouldNotCatch ? callback() : tryAgain(context);
       }
     });
-  } else {
-    tryAgain(context);
-  }
 }
 
 function sendResponse(context, statusCode, message) {

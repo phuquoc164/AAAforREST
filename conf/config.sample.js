@@ -44,6 +44,23 @@ module.exports = {
      */
     //hideLocationParts: 0,
 
+    /**
+     * Handle session with cookies, 
+     * create with POST /_session -d'userfield=username&passfield=password'
+     * get with GET /_session
+     * destroy with DELETE /_session
+     */
+    /*sessionHandler: {
+      cookieName:"AAAforRest-auth",
+      sessionLength:600000, //10 minutes inactivity
+      userfield:"username",
+      passfield:"password",
+      path:"/_session",
+      forward:false //forward the request to the upstream server ?
+        //credentials are lesft out if the POST was succesfully authenticated
+	//defaults to site.preserveCredentials
+    },*/
+
     authentication: [
 
       /**

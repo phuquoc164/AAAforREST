@@ -13,12 +13,13 @@ module.exports = function() {
   };
 
   return function(context, settings, callback) {
+    if (!context.login) return callback(false);
     var negativeCacheTime = (settings.negativeCacheTime || 300) /* 5 minutes*/ * 1000 /*ms*/;
     var positiveCacheTime = (settings.positiveCacheTime || 900) /* 15 minutes*/ * 1000 /*ms*/;
     var url = settings.url;
     var ldapReq = settings.id + '=' + context.login + ',' + settings.dn; //do not manage more than one dc information
     var id = CRYPTO.createHash('sha1')
-      .update(url).update(ldapReq).update(context.pw)
+      .update(url).update(ldapReq).update(context.pw?context.pw:"")
       .digest('hex');
     var login = context.login;
     if (typeof settings.domain != 'undefined') {
