@@ -32,6 +32,7 @@ function act(context, toDo) {
     method: method,
     path: path,
     authenticate: authenticate,
+    authenticateIfPresent: authenticateIfPresent,
     authorize: authorize,
     proxyWork: proxyWork,
     readBody: readBody,
@@ -54,6 +55,11 @@ var dummy = function(context, settings, callback) {
   callback(context.login && context.login==settings.login && context.pw==settings.password);
 };
 
+function authenticateIfPresent(context, callback) {
+  var authenticationPresent=context.login ? true : false;
+  authenticate(context,callback,!authenticationPresent);
+};
+
 function authenticate(context, callback, shouldNotCatch) {
     var authenticators = configuration.sites[context.conf].authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
@@ -71,7 +77,14 @@ function authenticate(context, callback, shouldNotCatch) {
         }
         callback(successfulAuthenticator);
       } else {
-        shouldNotCatch ? callback() : tryAgain(context);
+        delete context.login;
+        //if authorization header is present, it means that preserveCredentials
+        //is true, so we authorize to forward the request to upstream server
+        if (context.options.headers.Authorization || shouldNotCatch) {
+          callback();
+        } else {
+          tryAgain(context);
+        }
       }
     });
 }

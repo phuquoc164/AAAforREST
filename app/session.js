@@ -29,7 +29,6 @@ function handleSessionRequest(sessionHandler) {
 	      $.sendResponse($.context, 200, 'Authentified');
 	    }
 	  } else {
-	    delete $.context.login;
 	    authCookie.set($.context,sessionHandler);
 	    if(sessionHandler.forward) {
 	      $.proxyWork($.context);
@@ -41,7 +40,7 @@ function handleSessionRequest(sessionHandler) {
       });
       break;
     case "DELETE":
-      $.context.login=null;
+      delete $.context.login;
       authCookie.set($.context,sessionHandler);
       if (sessionHandler.forward) {
         $.proxyWork($.context);
@@ -50,25 +49,24 @@ function handleSessionRequest(sessionHandler) {
       }
       break;
     case "GET":
-      $.authenticate($.context,function(authenticator) {
-        if(authenticator) {
-	}
-        var session={
-	  name:$.context.login || null,
-	  authenticator:authenticator
-	}
-	if (sessionHandler.forward) {
-	  $.proxyWork($.context);
-	} else {
-	  $.sendResponse($.context, 200, JSON.stringify(session));
-	}
-      },true);
+      console.log(context.login);
+      $.authenticateIfPresent($.context,function(authenticator) {
+        if (sessionHandler.forward) {
+          $.proxyWork($.context);
+        } else {
+          var session={
+            name:$.context.login || null,
+            authenticator:authenticator
+          }
+          $.sendResponse($.context, 200, JSON.stringify(session));
+        }
+      });
       break;
     default:
       if (sessionHandler.forward) {
-        $.authenticate($.context,function() {
+        $.authenticateIfPresent($.context,function() {
 	  proxyWork($.context);
-	},true);
+	});
       } else {
         $.sendResponse($.context, 405, 'Method not allowed');
       }
