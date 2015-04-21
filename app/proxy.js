@@ -67,7 +67,7 @@ function authenticate(context, callback, shouldNotCatch) {
     }, function(successfulAuthenticator) {
       if (successfulAuthenticator) {
         if (!successfulAuthenticator.preserveCredentials) {
-          delete context.requestIn.headers.authorization;
+          delete context.options.headers.Authorization;
         }
         callback(successfulAuthenticator);
       } else {
