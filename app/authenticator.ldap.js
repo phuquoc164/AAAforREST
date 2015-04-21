@@ -31,6 +31,10 @@ module.exports = function() {
       if (domain)
         login = context.login + '@' + domain;
     }
+
+    checkAuth();
+
+    function checkAuth() {
     if (!cache[url] || !cache[url][id]) {
       console.log('Logging in ' + ldapReq + ' into ' + url);
       if (!cache[url]) {
@@ -61,8 +65,13 @@ module.exports = function() {
         }
       });
     } else {
-      if (!cache[url][id].err) context.login = login;
-      callback(!cache[url][id].err);
+      if (cache[url][id].hasOwnProperty("err")) {
+        if (!cache[url][id].err) context.login = login;
+        callback(!cache[url][id].err);
+      } else {
+         setTimeout(checkAuth,100);
+      }
+    }
     }
   };
 
