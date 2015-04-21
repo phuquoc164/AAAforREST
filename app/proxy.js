@@ -135,9 +135,20 @@ function proxyWork(context) {
       locationParts.splice(3, site.hideLocationParts);
       responseIn.headers.location = locationParts.join('/');
     }
+
+    var responseHeaders=preserveHeadersCase(responseIn.headers);
+
+    for (var header in responseHeaders) {
+      var value=responseHeaders[header];
+      var existingHeader=context.responseOut.getHeader(header);
+      if (existingHeader) {
+	value=[value].concat(existingHeader);
+      }
+      context.responseOut.setHeader(header,value);
+    }
+
     context.responseOut.writeHead(
-      responseIn.statusCode,
-      preserveHeadersCase(responseIn.headers)
+      responseIn.statusCode
     );
     log(context, 'HTTP', responseIn.statusCode);
     responseIn.on('data', function(chunkOrigin) {
