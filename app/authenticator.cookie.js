@@ -55,7 +55,7 @@ function setAuthCookie(context,authenticator) {
       auth_info={};
     }
     auth_info.timestamp=new Date().getTime();
-  } else {
+  } else if (context.login) {
     var ok=false;
     while (!ok) {
       currcookie=crypto.createHash('sha1').update(authenticator.cookieName).update("plipplop"+new Date().getTime()).digest('hex');
@@ -70,8 +70,12 @@ function setAuthCookie(context,authenticator) {
     auth_info.login=context.login;
     saved_cookies[currcookie]=auth_info;
   } else {
-    delete saved_cookies[currcookie];
-    currcookie=null;
+    if (currcookie) {
+      delete saved_cookies[currcookie];
+      currcookie=null;
+    } else {
+      return;
+    }
   }
   console.log("setting cookie "+currcookie);
   cookies.set(authenticator.cookieName,currcookie,{overwrite:true});
