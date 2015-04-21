@@ -15,7 +15,7 @@ function ignoreCookie(context,authenticator) {
 function checkAuthCookie(context,authenticator,callback) {
   var currcookie;
   authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
-  if (context.cookie && context.cookie.ignore
+  if (context.login || context.cookie && context.cookie.ignore
     && context.cookie.ignore.indexOf(authenticator.cookieName) !=-1) {
     return callback(false);
   }
