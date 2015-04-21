@@ -75,6 +75,12 @@ function authenticate(context, callback, shouldNotCatch) {
         if (!successfulAuthenticator.preserveCredentials) {
           delete context.options.headers.Authorization;
         }
+        var site=configuration.sites[context.conf];
+        if (site.proxyAuth) {
+          if (site.proxyAuth.headerName && context.login) {
+            context.options.headers[site.proxyAuth.headerName]=context.login;
+          }
+        }
         callback(successfulAuthenticator);
       } else {
         delete context.login;
@@ -156,8 +162,9 @@ function proxyWork(context) {
       delete context.options.headers['Content-Length'];
   }
 
+  var site = configuration.sites[context.conf];
+
   var requestOut = http.request(context.options, function(responseIn) {
-    var site = configuration.sites[context.conf];
     if (responseIn.headers.location && site.hideLocationParts) {
       var locationParts = responseIn.headers.location.split('/');
       locationParts.splice(3, site.hideLocationParts);

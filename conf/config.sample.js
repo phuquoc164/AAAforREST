@@ -76,7 +76,16 @@ module.exports = {
       {login: "roadrunner", password: "bipbip"}
     ],
 
-    restricted: {
+    /**
+     * Proxy Authentication sends the authuicated user to the upstream server
+     * in the request headers.
+     */
+     /*proxyAuth: {
+       headerName:"X-Auth-CouchDB-UserName" //the header in which set
+         //the authenticated user
+     },
+
+     restricted: {
 
       /**
        * Restricted resources patterns and authorized users.
