@@ -32,6 +32,9 @@ module.exports = function() {
         login = context.login + '@' + domain;
     }
 
+    var maxWaits=20;
+    var waits=0;
+
     checkAuth();
 
     function checkAuth() {
@@ -69,7 +72,12 @@ module.exports = function() {
         if (!cache[url][id].err) context.login = login;
         callback(!cache[url][id].err);
       } else {
-         setTimeout(checkAuth,100);
+         waits++;
+         if (waits>maxWaits) {
+           delete cache[url][id];
+         } else {
+           setTimeout(checkAuth,100);
+         }
       }
     }
     }
