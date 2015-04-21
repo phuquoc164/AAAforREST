@@ -51,7 +51,6 @@ function handleSessionRequest(sessionHandler) {
       }
       break;
     case "GET":
-      console.log(context.login);
       $.authenticateIfPresent($.context,function(authenticator) {
         if (sessionHandler.forward) {
           $.proxyWork($.context);
