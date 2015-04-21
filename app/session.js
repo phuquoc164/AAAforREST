@@ -17,6 +17,7 @@ function handleSessionRequest(sessionHandler) {
     case "POST":
       this.readBody(this.context,function(body) {
         parseBody($.context,sessionHandler);
+        authCookie.ignore($.context,sessionHandler);
 	$.authenticate($.context,function(authenticator) {
 	  if (authenticator) {
 	    authCookie.set($.context,sessionHandler);
@@ -28,6 +29,8 @@ function handleSessionRequest(sessionHandler) {
 	      $.sendResponse($.context, 200, 'Authentified');
 	    }
 	  } else {
+	    delete $.context.login;
+	    authCookie.set($.context,sessionHandler);
 	    if(sessionHandler.forward) {
 	      $.proxyWork($.context);
 	    } else {
@@ -55,7 +58,7 @@ function handleSessionRequest(sessionHandler) {
 	  authenticator:authenticator
 	}
 	if (sessionHandler.forward) {
-	  $.proxyWork($.context); 
+	  $.proxyWork($.context);
 	} else {
 	  $.sendResponse($.context, 200, JSON.stringify(session));
 	}

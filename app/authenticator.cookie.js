@@ -5,9 +5,20 @@ var saved_cookies={};
 const default_cookie_auth_name='AAAforRest-auth';
 var defaultExpiryTime=600000;
 
+function ignoreCookie(context,authenticator) {
+  authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
+  context.cookie=context.cookie||{};
+  context.cookie.ignore=context.cookie.ignore || [];
+  context.cookie.ignore.push(authenticator.cookieName);
+}
+
 function checkAuthCookie(context,authenticator,callback) {
   var currcookie;
   authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
+  if (context.cookie && context.cookie.ignore 
+    && context.cookie.ignore.indexOf(authenticator.cookieName) !=-1) {
+    return callback(false);
+  }
   var expiryTime=authenticator.sessionLength || defaultExpiryTime;
   var cookies=new Cookies(context.requestIn,context.responseOut);
   if (currcookie=cookies.get(authenticator.cookieName)) {
@@ -23,6 +34,7 @@ function checkAuthCookie(context,authenticator,callback) {
       }
     } else {
       console.log("cookie does not exist");
+      cookies.set(authenticator.cookieName,null,{overwrite:true});
     }
   }
   callback(false);
@@ -67,6 +79,7 @@ function setAuthCookie(context,authenticator) {
 
 module.exports={
   check: checkAuthCookie,
-  set: setAuthCookie
+  set: setAuthCookie,
+  ignore: ignoreCookie
 }
 
