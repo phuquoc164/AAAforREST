@@ -120,6 +120,19 @@ function preserveHeadersCase(nodeHeaders) {
   return couchHeaders;
 }
 
+
+function addHeaders(response,headers) {
+  headers=preserveHeadersCase(headers);
+  for (var header in headers) {
+    var value=headers[header];
+    var existingHeader=response.getHeader(header);
+    if (existingHeader) {
+      value=[value].concat(existingHeader);
+    }
+    response.setHeader(header,value);
+  }
+}
+
 // Main proxy function that forward the request and the related answers
 
 function proxyWork(context) {
@@ -136,16 +149,7 @@ function proxyWork(context) {
       responseIn.headers.location = locationParts.join('/');
     }
 
-    var responseHeaders=preserveHeadersCase(responseIn.headers);
-
-    for (var header in responseHeaders) {
-      var value=responseHeaders[header];
-      var existingHeader=context.responseOut.getHeader(header);
-      if (existingHeader) {
-	value=[value].concat(existingHeader);
-      }
-      context.responseOut.setHeader(header,value);
-    }
+    addHeaders(context.responseOut,responseIn.headers);
 
     context.responseOut.writeHead(
       responseIn.statusCode
