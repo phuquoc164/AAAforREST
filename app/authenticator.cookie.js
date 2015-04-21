@@ -16,7 +16,7 @@ function checkAuthCookie(context,authenticator,callback) {
       if (auth_info.timestamp<new Date().getTime()+expiryTime && auth_info.login) {
         auth_info.timestamp=new Date();
         context.login=auth_info.login;
-        callback(true);
+        return callback(true);
       } else {
         console.log("expired");
         delete saved_cookies[currcookie];

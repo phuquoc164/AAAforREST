@@ -3,7 +3,7 @@ var authCookie=require('./authenticator.cookie');
 var log = require('./accounter.log');
 
 function parseBody(context,sessionHandler) {
-  var post=require("querystring").parse(context.body);
+  var post=require("querystring").parse(context.options.body);
   var userfield=sessionHandler.userfield || "username";
   var passfield=sessionHandler.passfield || "password";
   context.login=post[userfield] || "";
@@ -21,7 +21,7 @@ function handleSessionRequest(sessionHandler) {
 	  if (authenticator) {
 	    authCookie.set($.context,sessionHandler);
 	    if (sessionHandler.forward) {
-	      delete context.body;
+	      delete context.options.body;
 	      $.context.options.method="GET";
 	      $.proxyWork($.context);
 	    } else {

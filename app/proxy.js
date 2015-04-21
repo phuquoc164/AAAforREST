@@ -17,11 +17,11 @@ function readBody(context,callback) {
       body+=chunk;
     });
     context.requestIn.on('end',function() {
-      context.body=body;
+      context.options.body=body;
       callback(body);
     });
   } else {
-    callback(context.body);
+    callback(context.options.body);
   }
 }
 
@@ -127,6 +127,7 @@ function proxyWork(context) {
      if (context.options.body && typeof context.options.body =='string') context.options.headers['content-length']=context.options.body.length;
      else delete context.options.headers['content-length'];
    }
+
   var requestOut = http.request(context.options, function(responseIn) {
     var site = configuration.sites[context.conf];
     if (responseIn.headers.location && site.hideLocationParts) {
