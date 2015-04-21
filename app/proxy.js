@@ -151,9 +151,9 @@ function addHeaders(response,headers) {
 function proxyWork(context) {
   if (!context.requestIn.readable) {
     if (context.options.body && typeof context.options.body =='string')
-      context.options.headers['content-length']=context.options.body.length;
+      context.options.headers['Content-Length']=context.options.body.length;
     else
-      delete context.options.headers['content-length'];
+      delete context.options.headers['Content-Length'];
   }
 
   var requestOut = http.request(context.options, function(responseIn) {

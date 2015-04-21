@@ -56,9 +56,10 @@ module.exports = {
       userfield:"username",
       passfield:"password",
       path:"/_session",
-      forward:false //forward the request to the upstream server ?
-        //credentials are lesft out if the POST was succesfully authenticated
+      preserveCredentials:false, //if authentication fails, transmit to upstream ?
         //defaults to site.preserveCredentials
+      forward:false //forward the request to the upstream server for display ?
+        //defaults to sessionHandler.preserveCredentials
     },*/
 
     authentication: [

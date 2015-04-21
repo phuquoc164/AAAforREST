@@ -31,6 +31,8 @@ function handleSessionRequest(sessionHandler) {
           } else {
             authCookie.set($.context,sessionHandler);
             if(sessionHandler.forward) {
+              if (!sessionHandler.preserveCredentials)
+                delete context.options.body;
               $.proxyWork($.context);
             } else {
               $.sendResponse($.context, 401, 'Unauthorized');
@@ -75,8 +77,11 @@ function handleSessionRequest(sessionHandler) {
 
 function addSessionRule(site) {
   if (site.sessionHandler) {
+    if (!site.sessionHandler.hasOwnProperty("preserveCredentials")) {
+      site.sessionHandler.preserveCredentials=site.preserveCredentials;
+    }
     if (!site.sessionHandler.hasOwnProperty("forward")) {
-      site.sessionHandler.forward=site.preserveCredentials;
+      site.sessionHandler.forward=site.sessionHandler.preserveCredentials;
     }
     var rule={};
     rule.control=function() {
