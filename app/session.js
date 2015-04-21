@@ -18,25 +18,25 @@ function handleSessionRequest(sessionHandler) {
       this.readBody(this.context,function(body) {
         parseBody($.context,sessionHandler);
         authCookie.ignore($.context,sessionHandler);
-	$.authenticate($.context,function(authenticator) {
-	  if (authenticator) {
-	    authCookie.set($.context,sessionHandler);
-	    if (sessionHandler.forward) {
-	      delete context.options.body;
-	      $.context.options.method="GET";
-	      $.proxyWork($.context);
-	    } else {
-	      $.sendResponse($.context, 200, 'Authentified');
-	    }
-	  } else {
-	    authCookie.set($.context,sessionHandler);
-	    if(sessionHandler.forward) {
-	      $.proxyWork($.context);
-	    } else {
-	      $.sendResponse($.context, 401, 'Unauthorized');
-	    }
-	  }
-	},true);
+        $.authenticate($.context,function(authenticator) {
+          if (authenticator) {
+            authCookie.set($.context,sessionHandler);
+            if (sessionHandler.forward) {
+              delete context.options.body;
+              $.context.options.method="GET";
+              $.proxyWork($.context);
+            } else {
+              $.sendResponse($.context, 200, 'Authentified');
+            }
+          } else {
+            authCookie.set($.context,sessionHandler);
+            if(sessionHandler.forward) {
+              $.proxyWork($.context);
+            } else {
+              $.sendResponse($.context, 401, 'Unauthorized');
+            }
+          }
+        },true);
       });
       break;
     case "DELETE":
@@ -65,8 +65,8 @@ function handleSessionRequest(sessionHandler) {
     default:
       if (sessionHandler.forward) {
         $.authenticateIfPresent($.context,function() {
-	  proxyWork($.context);
-	});
+          proxyWork($.context);
+        });
       } else {
         $.sendResponse($.context, 405, 'Method not allowed');
       }
@@ -85,7 +85,7 @@ function addSessionRule(site) {
         console.log("session handler with no Path defined");
         return false;
       } else if (!/^\//.test(site.sessionHandler.path)) {
-	site.sessionHandler.path = "/" +site.sessionHandler.path;
+        site.sessionHandler.path = "/" +site.sessionHandler.path;
       }
       return new RegExp("^"+site.sessionHandler.path).test(this.path);
     };

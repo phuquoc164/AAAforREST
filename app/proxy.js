@@ -149,10 +149,12 @@ function addHeaders(response,headers) {
 // Main proxy function that forward the request and the related answers
 
 function proxyWork(context) {
-   if (!context.requestIn.readable) {
-     if (context.options.body && typeof context.options.body =='string') context.options.headers['content-length']=context.options.body.length;
-     else delete context.options.headers['content-length'];
-   }
+  if (!context.requestIn.readable) {
+    if (context.options.body && typeof context.options.body =='string')
+      context.options.headers['content-length']=context.options.body.length;
+    else
+      delete context.options.headers['content-length'];
+  }
 
   var requestOut = http.request(context.options, function(responseIn) {
     var site = configuration.sites[context.conf];
@@ -208,7 +210,7 @@ function proxyWork(context) {
 
 // Function that allow to find the index of the requested server inside config.json
 
-var matching = function(host){ 
+var matching = function(host){
   var verif = false;
   var i =0;
   while ((verif == false) && (i < configuration.sites.length)){
@@ -266,7 +268,7 @@ http.createServer(function(requestIn, responseOut) {
   if(index == -1){
     sendResponse(context, 404, "Not Found");
   }else{
-  	context.conf = index;
+    context.conf = index;
     var site = configuration.sites[index];
     context.options = {
       host: site.host || 'localhost',

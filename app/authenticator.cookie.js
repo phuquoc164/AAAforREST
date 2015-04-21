@@ -15,7 +15,7 @@ function ignoreCookie(context,authenticator) {
 function checkAuthCookie(context,authenticator,callback) {
   var currcookie;
   authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
-  if (context.cookie && context.cookie.ignore 
+  if (context.cookie && context.cookie.ignore
     && context.cookie.ignore.indexOf(authenticator.cookieName) !=-1) {
     return callback(false);
   }
@@ -48,8 +48,8 @@ function setAuthCookie(context,authenticator) {
   if (currcookie=cookies.get(authenticator.cookieName)) {
     if (auth_info=saved_cookies[currcookie]) {
       if (context.login && auth_info.login!=context.login) {
-	console.log("switching authentication from "+auth_info.login
-	    +" to "+context.login);
+        console.log("switching authentication from "+auth_info.login
+            +" to "+context.login);
       }
     } else {
       auth_info={};
@@ -79,7 +79,7 @@ function setAuthCookie(context,authenticator) {
   }
   console.log("setting cookie "+currcookie);
   cookies.set(authenticator.cookieName,currcookie,{overwrite:true});
-}  
+}
 
 module.exports={
   check: checkAuthCookie,

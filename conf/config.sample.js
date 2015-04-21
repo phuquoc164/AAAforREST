@@ -45,7 +45,7 @@ module.exports = {
     //hideLocationParts: 0,
 
     /**
-     * Handle session with cookies, 
+     * Handle session with cookies,
      * create with POST /_session -d'userfield=username&passfield=password'
      * get with GET /_session
      * destroy with DELETE /_session
@@ -58,7 +58,7 @@ module.exports = {
       path:"/_session",
       forward:false //forward the request to the upstream server ?
         //credentials are lesft out if the POST was succesfully authenticated
-	//defaults to site.preserveCredentials
+        //defaults to site.preserveCredentials
     },*/
 
     authentication: [
@@ -78,7 +78,7 @@ module.exports = {
     restricted: {
 
       /**
-       * Restricted resources patterns and authorized users. 
+       * Restricted resources patterns and authorized users.
        */
       "rocket": ["will.coyote"],
       "magnet": ["will.coyote"],

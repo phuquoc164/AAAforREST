@@ -51,7 +51,7 @@ module.exports = function() {
         cache[url][id].timeOut =
           setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
         var isAuthentified = !err;
-        if (isAuthentified) { 
+        if (isAuthentified) {
           context.login = login;
           ldap.unbind(function () {
             callback(isAuthentified);
