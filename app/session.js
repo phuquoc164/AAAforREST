@@ -2,6 +2,21 @@ var configuration = require('./configuration');
 var authCookie=require('./authenticator.cookie');
 var log = require('./accounter.log');
 
+function readBody(context,callback) {
+  if (context.requestIn.readable) {
+    var body="";
+    context.requestIn.on('data',function(chunk) {
+      body+=chunk;
+    });
+    context.requestIn.on('end',function() {
+      context.options.body=body;
+      callback(body);
+    });
+  } else {
+    callback(context.options.body);
+  }
+}
+
 function parseBody(context,sessionHandler) {
   var post=require("querystring").parse(context.options.body);
   var userfield=sessionHandler.userfield || "username";
@@ -15,7 +30,7 @@ function handleSessionRequest(sessionHandler) {
   var context=this.context;
   switch (this.method) {
     case "POST":
-      this.readBody(this.context,function(body) {
+      readBody(this.context,function(body) {
         parseBody($.context,sessionHandler);
         authCookie.ignore($.context,sessionHandler);
         $.authenticate($.context,function(authenticator) {

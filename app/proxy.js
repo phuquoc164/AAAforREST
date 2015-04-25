@@ -10,21 +10,6 @@ var session = require('./session');
 configuration.sites.forEach(session.manage);
 
 
-function readBody(context,callback) {
-  if (context.requestIn.readable) {
-    var body="";
-    context.requestIn.on('data',function(chunk) {
-      body+=chunk;
-    });
-    context.requestIn.on('end',function() {
-      context.options.body=body;
-      callback(body);
-    });
-  } else {
-    callback(context.options.body);
-  }
-}
-
 function act(context, toDo) {
   var method = context.requestIn.method,
     path = url.parse(context.requestIn.url).path;
@@ -35,7 +20,6 @@ function act(context, toDo) {
     authenticateIfPresent: authenticateIfPresent,
     authorize: authorize,
     proxyWork: proxyWork,
-    readBody: readBody,
     sendResponse: sendResponse,
     context: context
   };
