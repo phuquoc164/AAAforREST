@@ -3,11 +3,10 @@ var url = require('url');
 var async = require('async');
 var configuration = require('./configuration');
 var ldap = require('./authenticator.ldap');
-var cookie = require('./authenticator.cookie').check;
+var cookie = require('./authenticator.cookie');
 var log = require('./accounter.log');
-var session = require('./session');
 
-configuration.sites.forEach(session.manage);
+configuration.sites.forEach(cookie.manageSession);
 
 
 function act(context, toDo) {
@@ -50,7 +49,7 @@ function authenticate(context, callback, shouldNotCatch) {
       if (authenticator.dn) {
         ldap(context, authenticator, callback);
       } else if (authenticator.hasOwnProperty("cookieName")) {
-        cookie(context, authenticator, callback);
+        cookie.check(context, authenticator, callback);
       } else {
         dummy(context, authenticator, callback);
       }
