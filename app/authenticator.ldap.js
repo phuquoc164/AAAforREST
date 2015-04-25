@@ -75,6 +75,8 @@ module.exports = function() {
            waits++;
            if (waits>maxWaits) {
              delete cache[url][id];
+             waits=0;
+             checkAuth();
            } else {
              setTimeout(checkAuth,100);
            }
