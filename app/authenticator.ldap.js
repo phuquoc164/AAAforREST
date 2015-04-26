@@ -33,46 +33,56 @@ module.exports = function() {
         login = context.login + '@' + domain;
     }
 
+    var maxWaits=20;
+    var waits=0;
+
     checkAuth();
 
     function checkAuth() {
-    if (!cache[url] || !cache[url][id]) {
-      console.log('Logging in ' + ldapReq + ' into ' + url);
-      if (!cache[url]) {
-        cache[url] = {};
-      }
-      if (!(id in cache[url])) {
-        cache[url][id] = {};
-      }
-      var ldap = LDAP.createClient({
-        'url': url
-      });
-      ldap.bind(ldapReq, context.pw, function(err) {
-        if ('timeOut' in cache[url][id]) {
-          clearTimeout(cache[url][id].timeOut);
+      if (!cache[url] || !cache[url][id]) {
+        console.log('Logging in ' + ldapReq + ' into ' + url);
+        if (!cache[url]) {
+          cache[url] = {};
         }
-        cache[url][id].err = err;
-        cache[url][id].timeOut =
-          setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
-        var isAuthentified = !err;
-        if (isAuthentified) {
-          context.login = login;
-          ldap.unbind(function () {
+        if (!(id in cache[url])) {
+          cache[url][id] = {};
+        }
+        var ldap = LDAP.createClient({
+          'url': url
+        });
+        ldap.bind(ldapReq, context.pw, function(err) {
+          if ('timeOut' in cache[url][id]) {
+            clearTimeout(cache[url][id].timeOut);
+          }
+          cache[url][id].err = err;
+          cache[url][id].timeOut =
+            setTimeout(flush, err?negativeCacheTime:positiveCacheTime, id, url);
+          var isAuthentified = !err;
+          if (isAuthentified) {
+            context.login = login;
+            ldap.unbind(function () {
+              callback(isAuthentified);
+            });
+          } else {
+            console.log('LDAP error: ' + JSON.stringify(err));
             callback(isAuthentified);
-          });
-        } else {
-          console.log('LDAP error: ' + JSON.stringify(err));
-          callback(isAuthentified);
-        }
-      });
-    } else {
-      if (cache[url][id].hasOwnProperty("err")) {
-        if (!cache[url][id].err) context.login = login;
-        callback(!cache[url][id].err);
+          }
+        });
       } else {
-         setTimeout(checkAuth,100);
+        if (cache[url][id].hasOwnProperty("err")) {
+          if (!cache[url][id].err) context.login = login;
+          callback(!cache[url][id].err);
+        } else {
+           waits++;
+           if (waits>maxWaits) {
+             delete cache[url][id];
+             waits=0;
+             checkAuth();
+           } else {
+             setTimeout(checkAuth,100);
+           }
+        }
       }
-    }
     }
   };
 
