@@ -119,36 +119,20 @@ function authorize(context, callback) {
   }
 }
 
-function uCaseWord(word) {
-  switch(word) {
-    case 'etag':return 'ETag';
-    default: return word.replace(/^./,function(l){return l.toUpperCase();});
-  }
-}
-
-function uCaseHeader(headerName) {
-  return headerName.replace(/\w*/g,uCaseWord);
-}
-
-//TODO replace with `.rawHeaders` when Node.js stable version is 0.11
-function preserveHeadersCase(nodeHeaders) {
-  var couchHeaders={};
-  for (var i in nodeHeaders) {
-    couchHeaders[uCaseHeader(i)]=nodeHeaders[i];
-  }
-  return couchHeaders;
-}
-
-
 function addHeaders(response,headers) {
-  headers=preserveHeadersCase(headers);
-  for (var header in headers) {
-    var value=headers[header];
-    var existingHeader=response.getHeader(header);
-    if (existingHeader) {
-      value=[value].concat(existingHeader);
+  var key;
+  for (var header of headers) {
+    if (!key) {
+      key = header;
+    } else {
+      var value = header;
+      var existingHeader = response.getHeader(key);
+      if (existingHeader) {
+        value = [value].concat(existingHeader);
+      }
+      response.setHeader(key, value);
+      key = null;
     }
-    response.setHeader(header,value);
   }
 }
 
@@ -171,7 +155,7 @@ function proxyWork(context) {
       responseIn.headers.location = locationParts.join('/');
     }
 
-    addHeaders(context.responseOut,responseIn.headers);
+    addHeaders(context.responseOut, responseIn.rawHeaders);
 
     context.responseOut.writeHead(
       responseIn.statusCode
@@ -282,7 +266,7 @@ http.createServer(function(requestIn, responseOut) {
       port: site.port || 80,
       path: (site.path || '') + url.parse(requestIn.url).path,
       method: requestIn.method,
-      headers: preserveHeadersCase(requestIn.headers),
+      headers: requestIn.headers,
       agent: false
     };
     if (!site.preserveCredentials) delete context.options.headers.Authorization;
