@@ -3,27 +3,11 @@ var url = require('url');
 var async = require('async');
 var configuration = require('./configuration');
 var ldap = require('./authenticator.ldap');
-var cookie = require('./authenticator.cookie').check;
+var cookie = require('./authenticator.cookie');
 var log = require('./accounter.log');
-var session = require('./session');
 
-configuration.sites.forEach(session.manage);
+configuration.sites.forEach(cookie.manageSession);
 
-
-function readBody(context,callback) {
-  if (context.requestIn.readable) {
-    var body="";
-    context.requestIn.on('data',function(chunk) {
-      body+=chunk;
-    });
-    context.requestIn.on('end',function() {
-      context.options.body=body;
-      callback(body);
-    });
-  } else {
-    callback(context.options.body);
-  }
-}
 
 function act(context, toDo) {
   var method = context.requestIn.method,
@@ -35,7 +19,6 @@ function act(context, toDo) {
     authenticateIfPresent: authenticateIfPresent,
     authorize: authorize,
     proxyWork: proxyWork,
-    readBody: readBody,
     sendResponse: sendResponse,
     context: context
   };
@@ -66,7 +49,7 @@ function authenticate(context, callback, shouldNotCatch) {
       if (authenticator.dn) {
         ldap(context, authenticator, callback);
       } else if (authenticator.hasOwnProperty("cookieName")) {
-        cookie(context, authenticator, callback);
+        cookie.check(context, authenticator, callback);
       } else {
         dummy(context, authenticator, callback);
       }
