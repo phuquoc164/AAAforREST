@@ -1,0 +1,22 @@
+services: couchdb
+language: node_js
+node_js: "0.12"
+addons:
+  hosts:
+    - traduxio.local
+install:
+- npm install
+- npm install -g jasmine-node
+- npm install frisby
+- cp conf/config.sample.json conf/config.json
+- node app/proxy.js &
+# Install CouchApp
+- sudo pip install couchapp
+# Install TraduXio
+- curl -X PUT localhost:5984/traduxio
+- wget https://github.com/benel/TraduXio/archive/master.zip
+- unzip master.zip
+- cd TraduXio-master/couchdb
+- couchapp push . http://localhost:5984/traduxio
+- cd ../..
+script: jasmine-node spec/api/
