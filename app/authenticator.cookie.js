@@ -18,7 +18,7 @@ function readBody(context,callback) {
 
 function parseBody(context,sessionHandler) {
   var post=require("querystring").parse(context.options.body);
-  var userfield=sessionHandler.userfield || "username";
+  var userfield=sessionHandler.userfield || "name";
   var passfield=sessionHandler.passfield || "password";
   context.login=post[userfield] || "";
   context.pw=post[passfield] || "";
@@ -40,7 +40,7 @@ function handleSessionRequest(sessionHandler) {
               $.context.options.method="GET";
               $.proxyWork($.context);
             } else {
-              $.sendResponse($.context, 200, 'Authentified');
+              $.sendResponse($.context, 200, JSON.stringify({ok: true}));
             }
           } else {
             setAuthCookie($.context,sessionHandler);
@@ -49,7 +49,7 @@ function handleSessionRequest(sessionHandler) {
                 delete context.options.body;
               $.proxyWork($.context);
             } else {
-              $.sendResponse($.context, 401, 'Unauthorized');
+              $.sendResponse($.context, 401, JSON.stringify({error: "unauthorized"}));
             }
           }
         },true);

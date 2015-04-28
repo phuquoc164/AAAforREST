@@ -12,21 +12,12 @@
     "restricted": {
       "iamlate": ["mrwhite"]
     },
+    "sessionHandler": {
+      "path": "/_session"
+    },
     "rules": [{
       "control": "method != 'GET' || /Wonderland/.test(path)",
       "action": "authenticate(context,function(){authorize(context,function(){proxyWork(context)})})"
-    }]
-  },{
-    "hostProxy": "traduxio.local",
-    "port": 5984,
-    "path": "/traduxio/_design/traduxio/_rewrite",
-    "hideLocationParts": 1,
-    "authentication": [
-      {"login": "alice", "password": "whiterabbit"}
-    ],
-    "rules": [{
-      "control": "/works/.test(path)",
-      "action": "authenticate(context, function(){proxyWork(context);});"
     }]
   }]
 }
