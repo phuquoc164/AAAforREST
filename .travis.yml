@@ -3,7 +3,7 @@ language: node_js
 node_js: "0.12"
 addons:
   hosts:
-    - traduxio.local
+    - cassandre.local
 install:
 - npm install
 - npm install -g jasmine-node
@@ -12,11 +12,11 @@ install:
 - node app/proxy.js &
 # Install CouchApp
 - sudo pip install couchapp
-# Install TraduXio
-- curl -X PUT localhost:5984/traduxio
-- wget https://github.com/benel/TraduXio/archive/master.zip
+# Install Cassandre
+- curl -X PUT -d '"false"' localhost:5984/_config/httpd/secure_rewrites
+- curl -X PUT localhost:5984/cassandre
+- curl -X PUT -d '{"corpus":"Wonderland", "name":"I am late"}' localhost:5984/cassandre/iamlate
+- wget https://github.com/Hypertopic/Cassandre/archive/master.zip
 - unzip master.zip
-- cd TraduXio-master/couchdb
-- couchapp push . http://localhost:5984/traduxio
-- cd ../..
+- couchapp push Cassandre-master http://localhost:5984/cassandre
 script: jasmine-node spec/api/
