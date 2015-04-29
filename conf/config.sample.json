@@ -20,5 +20,10 @@
       "control": "method != 'GET' || /Wonderland/.test(path)",
       "action": "authenticate(context,function(){authorize(context,function(){proxyWork(context)})})"
     }]
+  },{
+    "hostProxy": "couchdb.local",
+    "port": 5984,
+    "preserveCredentials": true,
+    "rules":[]
   }]
 }

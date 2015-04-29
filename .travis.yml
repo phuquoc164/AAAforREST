@@ -4,6 +4,7 @@ node_js: "0.12"
 addons:
   hosts:
     - cassandre.local
+    - couchdb.local
 install:
 - npm install
 - npm install -g jasmine-node
@@ -21,4 +22,5 @@ install:
 # Set up test fixture
 - curl -X PUT localhost:5984/cassandre/iamlate -d '{"corpus":"Wonderland", "name":"I am late"}'
 - curl -X PUT localhost:5984/_users/org.couchdb.user:hatter -H 'Accept:application/json' -H 'Content-Type:application/json' -d '{"name":"hatter", "password":"teaparty", "roles":[], "type":"user"}'
+- curl -X PUT localhost:5984/_config/admins/carroll -d '"curiouser"'
 script: jasmine-node spec/api/
