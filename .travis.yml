@@ -15,8 +15,10 @@ install:
 # Install Cassandre
 - curl -X PUT -d '"false"' localhost:5984/_config/httpd/secure_rewrites
 - curl -X PUT localhost:5984/cassandre
-- curl -X PUT -d '{"corpus":"Wonderland", "name":"I am late"}' localhost:5984/cassandre/iamlate
 - wget https://github.com/Hypertopic/Cassandre/archive/master.zip
 - unzip master.zip
 - couchapp push Cassandre-master http://localhost:5984/cassandre
+# Set up test fixture
+- curl -X PUT localhost:5984/cassandre/iamlate -d '{"corpus":"Wonderland", "name":"I am late"}'
+- curl -X PUT localhost:5984/_users/org.couchdb.user:hatter -H 'Accept:application/json' -H 'Content-Type:application/json' -d '{"name":"hatter", "password":"teaparty", "roles":[], "type":"user"}'
 script: jasmine-node spec/api/

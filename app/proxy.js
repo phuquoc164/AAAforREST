@@ -3,6 +3,7 @@ var url = require('url');
 var async = require('async');
 var configuration = require('./configuration');
 var ldap = require('./authenticator.ldap');
+var basic = require('./authenticator.http');
 var cookie = require('./authenticator.cookie');
 var log = require('./accounter.log');
 
@@ -46,8 +47,12 @@ function authenticateIfPresent(context, callback) {
 function authenticate(context, callback, shouldNotCatch) {
     var authenticators = configuration.sites[context.conf].authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
-      if (authenticator.dn) {
-        ldap(context, authenticator, callback);
+      if (authenticator.url) {
+        if (authenticator.dn) {
+          ldap(context, authenticator, callback);
+        } else {
+          basic(context, authenticator, callback);
+        }
       } else if (authenticator.hasOwnProperty("cookieName")) {
         cookie.check(context, authenticator, callback);
       } else {
