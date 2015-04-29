@@ -16,3 +16,14 @@ test.create('Preserve cookie authentication')
       .toss();
   })
   .toss();
+test.create('Do not preserve cookie authentication if failed locally')
+  .post('http://xcouchdb.local:1337/_session', {name:'carroll', password:'curiouser'})
+  .expectStatus(401)
+  .after(function(error, resource) {
+    test.create('Do not preserve cookie authentication use if failed locally')
+      .get('http://xcouchdb.local:1337/_active_tasks')
+      .addHeader('Cookie', resource.headers['set-cookie'])
+      .expectStatus(401)
+      .toss();
+  })
+  .toss();

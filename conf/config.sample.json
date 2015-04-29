@@ -21,9 +21,19 @@
       "action": "authenticate(context,function(){authorize(context,function(){proxyWork(context)})})"
     }]
   },{
-    "hostProxy": "couchdb.local",
+    "hostProxy": "^couchdb.local",
     "port": 5984,
     "preserveCredentials": true,
+    "rules":[]
+  },{
+    "hostProxy": "^xcouchdb.local",
+    "port": 5984,
+    "sessionHandler": {
+      "path": "/_session"
+    },
+    "authentication": [
+      {"login": "alice", "password": "whiterabbit"}
+    ],
     "rules":[]
   }]
 }
