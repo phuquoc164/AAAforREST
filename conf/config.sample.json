@@ -35,5 +35,19 @@
       {"login": "alice", "password": "whiterabbit"}
     ],
     "rules":[]
+  },{
+    "hostProxy": "^xxcouchdb.local",
+    "port": 5984,
+    "sessionHandler": {
+      "path": "/_session",
+      "preserveCredentials": true
+    },
+    "authentication": [
+      {"login": "alice", "password": "whiterabbit"}
+    ],
+    "proxyAuth": {
+      "headerName": "X-Auth-CouchDB-UserName"
+    },
+    "rules":[]
   }]
 }

@@ -27,3 +27,14 @@ test.create('Do not preserve cookie authentication if failed locally')
       .toss();
   })
   .toss();
+test.create('Preserve cookie authentication as a fallback')
+  .post('http://xxcouchdb.local:1337/_session', {name:'carroll', password:'curiouser'})
+  .expectStatus(200)
+  .after(function(error, resource) {
+    test.create('Preserve cookie authentication use as a fallback')
+      .get('http://xxcouchdb.local:1337/_active_tasks')
+      .addHeader('Cookie', resource.headers['set-cookie'])
+      .expectStatus(200)
+      .toss();
+  })
+  .toss();

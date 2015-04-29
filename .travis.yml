@@ -6,6 +6,7 @@ addons:
     - cassandre.local
     - couchdb.local
     - xcouchdb.local
+    - xxcouchdb.local
 install:
 - npm install
 - npm install -g jasmine-node
