@@ -5,7 +5,7 @@ function register() {
       var name = $("#login").val();
       $.ajax({
         type: "PUT",
-        url: "/_users/org.couchdb.user:" + name,
+        url: "_users/org.couchdb.user:" + name,
         contentType: "application/json",
         data: JSON.stringify({
           name: name,
