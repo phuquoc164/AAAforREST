@@ -64,10 +64,8 @@ function authenticate(context, callback, shouldNotCatch) {
           delete context.options.headers.Authorization;
         }
         var site=configuration.sites[context.conf];
-        if (site.proxyAuth) {
-          if (site.proxyAuth.headerName && context.login) {
-            context.options.headers[site.proxyAuth.headerName]=context.login;
-          }
+        if (site.forwardedLoginHeader && context.login) {
+          context.options.headers[site.forwardedLoginHeader] = context.login;
         }
         callback(successfulAuthenticator);
       } else {

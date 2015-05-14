@@ -38,3 +38,8 @@ test.create('Preserve cookie authentication as a fallback')
       .toss();
   })
   .toss();
+test.create('Forward authenticated login')
+  .get('http://xxxcouchdb.local:1337/_users/org.couchdb.user%3Ahatter')
+  .auth('hatter', 'unbirthday')
+  .expectStatus(200)
+  .toss();

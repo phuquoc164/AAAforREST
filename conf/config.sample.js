@@ -82,13 +82,10 @@ module.exports = {
     ],
 
     /**
-     * Proxy Authentication sends the authuicated user to the upstream server
-     * in the request headers.
+     * Header in which the authenticated user login will be forwarded to the
+     * upstream server.
      */
-     /*proxyAuth: {
-       headerName:"X-Auth-CouchDB-UserName" //the header in which set
-         //the authenticated user
-     },
+     //forwardedLoginHeader: null,
 
      restricted: {
 

@@ -7,6 +7,7 @@ addons:
     - couchdb.local
     - xcouchdb.local
     - xxcouchdb.local
+    - xxxcouchdb.local
 install:
 - npm install
 - npm install -g jasmine-node
@@ -22,6 +23,7 @@ install:
 - unzip master.zip
 - couchapp push Cassandre-master http://localhost:5984/cassandre
 # Set up test fixture
+- curl -X PUT -d '"{couch_httpd_auth, cookie_authentication_handler}, {couch_httpd_auth, proxy_authentication_handler}, {couch_httpd_auth, default_authentication_handler}"' localhost:5984/_config/httpd/authentication_handlers
 - curl -X PUT localhost:5984/cassandre/iamlate -d '{"corpus":"Wonderland", "name":"I am late"}'
 - curl -X PUT localhost:5984/_users/org.couchdb.user:hatter -H 'Accept:application/json' -H 'Content-Type:application/json' -d '{"name":"hatter", "password":"teaparty", "roles":[], "type":"user"}'
 - curl -X PUT localhost:5984/_config/admins/carroll -d '"curiouser"'

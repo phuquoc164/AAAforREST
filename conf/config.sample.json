@@ -45,9 +45,17 @@
     "authentication": [
       {"login": "alice", "password": "whiterabbit"}
     ],
-    "proxyAuth": {
-      "headerName": "X-Auth-CouchDB-UserName"
-    },
     "rules":[]
+  },{
+    "hostProxy": "^xxxcouchdb.local",
+    "port": 5984,
+    "authentication": [
+      {"login": "hatter", "password": "unbirthday"}
+    ],
+    "forwardedLoginHeader": "X-Auth-CouchDB-UserName",
+    "rules": [{
+      "control": "true",
+      "action": "authenticate(context,function(){proxyWork(context)})"
+    }]
   }]
 }
