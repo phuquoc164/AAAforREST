@@ -9,6 +9,11 @@ test.create('Public authorization with valid user read')
   .auth('alice', 'whiterabbit')
   .expectStatus(200)
   .toss();
+test.create('Public authorization with invalid user read')
+  .get('http://cassandre.local:1337/text/')
+  .auth('alice', 'rabbit')
+  .expectStatus(401)
+  .toss();
 test.create('Public authorization with anonymous write')
   .post('http://cassandre.local:1337/', {}, {json:true})
   .expectStatus(401)
