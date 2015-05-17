@@ -10,6 +10,11 @@ module.exports = {
    */
   //port: 80,
 
+  /**
+   * CouchDB service hosting _users database.
+   */
+  //users: 'localhost:5984',
+
   sites: [{
 
     /**

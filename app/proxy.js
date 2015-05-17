@@ -1,4 +1,6 @@
-var app = require('express')();
+var express = require('express');
+var vhost = require('vhost');
+var proxy = require('express-http-proxy');
 var http = require('http');
 var url = require('url');
 var async = require('async');
@@ -231,6 +233,13 @@ function parseHttpCredentials(context) {
     }
   }
 }
+
+var userApp = express.Router();
+userApp.use(express.static('public'));
+userApp.route('/_users/*').all(proxy(configuration.users || 'localhost:5984'));
+
+var app = express();
+app.use(vhost('auth.*', userApp));
 
 app.use(function(requestIn, responseOut, next) {
   var context = {

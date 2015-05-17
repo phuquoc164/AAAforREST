@@ -40,8 +40,3 @@ Installation procedure
 * The service can be stopped with:
 
         sudo forever stop app/proxy.js
-
-* The (optional) Web interface can be installed in CouchDB with:
-
-        curl -X PUT -d '"false"' localhost:5984/_config/httpd/secure_rewrites
-        couchapp push --browse db http://localhost:5984/aaaforrest

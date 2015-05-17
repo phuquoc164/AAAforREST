@@ -1,7 +1,0 @@
-[{
-  "from": "_users/:user",
-  "to": "../../../_users/:user"
-},{
-  "from": "*",
-  "to": "*"
-}]
