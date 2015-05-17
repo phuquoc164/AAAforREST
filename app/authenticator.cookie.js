@@ -40,7 +40,7 @@ function handleSessionRequest(sessionHandler) {
               $.context.options.method="GET";
               $.proxyWork($.context);
             } else {
-              $.sendResponse($.context, 200, JSON.stringify({ok: true}));
+              $.sendResponse($.context, 200, {ok: true});
             }
           } else {
             setAuthCookie($.context,sessionHandler);
@@ -49,7 +49,7 @@ function handleSessionRequest(sessionHandler) {
                 delete context.options.body;
               $.proxyWork($.context);
             } else {
-              $.sendResponse($.context, 401, JSON.stringify({error: "unauthorized"}));
+              $.sendResponse($.context, 401, {error: "unauthorized"});
             }
           }
         },true);
@@ -73,7 +73,7 @@ function handleSessionRequest(sessionHandler) {
             name:$.context.login || null,
             authenticator:authenticator
           }
-          $.sendResponse($.context, 200, JSON.stringify(session));
+          $.sendResponse($.context, 200, session);
         }
       });
       break;

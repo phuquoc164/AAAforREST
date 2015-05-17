@@ -1,3 +1,4 @@
+var app = require('express')();
 var http = require('http');
 var url = require('url');
 var async = require('async');
@@ -82,9 +83,8 @@ function authenticate(context, callback, shouldNotCatch) {
 }
 
 function sendResponse(context, statusCode, message) {
-  context.responseOut.statusCode = statusCode;
   log(context, 'HTTP', statusCode);
-  context.responseOut.end(message);
+  context.responseOut.status(statusCode).send(message);
 }
 
 /**
@@ -232,7 +232,7 @@ function parseHttpCredentials(context) {
   }
 }
 
-http.createServer(function(requestIn, responseOut) {
+app.use(function(requestIn, responseOut, next) {
   var context = {
     requestIn: requestIn,
     responseOut: responseOut,
@@ -291,5 +291,8 @@ http.createServer(function(requestIn, responseOut) {
     if (!found) proxyWork(context); //Fallback rule
   }
   });
-}).listen(configuration.port);
-console.log('Server running port ' + configuration.port);
+});
+
+app.listen(configuration.port, function() {
+  console.log('Server running port ' + configuration.port);
+});
