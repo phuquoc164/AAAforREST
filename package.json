@@ -9,6 +9,7 @@
     "ldapjs": ">=0.7.x",
     "winston": ">=0.8.x",
     "async": ">=0.9.x",
-    "cookies": ">=0.5"
+    "cookies": ">=0.5",
+    "couch-proxy-auth": ">=1.0.1"
   }
 }

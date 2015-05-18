@@ -70,6 +70,15 @@ function authenticate(context, callback, shouldNotCatch) {
         if (site.forwardedLoginHeader && context.login) {
           context.options.headers[site.forwardedLoginHeader] = context.login;
         }
+        if (site.forwardedLoginSecret && context.login) {
+          var addedHeaders=require('couch-proxy-auth')(context.login,site.forwardedLoginRoles || 'protect',site.forwardedLoginSecret);
+          for (var newHeader in addedHeaders) {
+            // since roles are forced to a value, the role header is given by couch-proxy-auth
+            // so can't be forged
+            //removeHeader(context.options.headers,newHeader);
+            context.options.headers[newHeader] = addedHeaders[newHeader];
+          }
+        }
         callback(successfulAuthenticator);
       } else {
         delete context.login;
@@ -127,6 +136,13 @@ function preserveHeadersCase(nodeHeaders) {
   return couchHeaders;
 }
 
+function removeHeader(headers,header) {
+  for (var h in headers) {
+    if (h.toLowerCase()==header.toLowerCase()) {
+      delete headers[h];
+    }
+  }
+}
 
 function addHeaders(response,headers) {
   headers=preserveHeadersCase(headers);
@@ -281,13 +297,6 @@ app.use(function(requestIn, responseOut, next) {
       agent: false
     };
     if (!site.preserveCredentials) delete context.options.headers.Authorization;
-    if (site.forwardedLoginHeader) {
-      for (var header in context.options.headers) {
-        if (header.toLowerCase()==site.forwardedLoginHeader.toLowerCase()) {
-          delete context.options.headers[header];
-        }
-      }
-    }
     parseHttpCredentials(context);
     var i = 0;
     var found = false;

@@ -92,6 +92,16 @@ module.exports = {
      */
      //forwardedLoginHeader: null,
 
+    /**
+     * Use of protected CouchDB proxy auth X-Auth-CouchDB-*
+     * The secret must be configured on the server
+     * http://127.0.0.1:5984/_config/couch_httpd_auth/secret
+     * and 127.0.0.1:5984/_config/couch_httpd_auth/proxy_use_secret to true
+     * forwardedLoginRoles is optional
+     */
+     //forwardedLoginSecret: 'saltcommon',
+     //forwardedLoginRoles: 'comma,separated,list,or,roles'
+
      restricted: {
 
       /**
