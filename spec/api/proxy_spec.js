@@ -38,8 +38,20 @@ test.create('Preserve cookie authentication as a fallback')
       .toss();
   })
   .toss();
+test.create('Can\'t forge proxy auth when not used')
+  .get('http://xxcouchdb.local:1337/_active_tasks')
+  .addHeader('x-auth-couchdb-username','hatter')
+  .addHeader('x-auth-couchdb-roles','_admin')
+  .expectStatus(401)
+  .toss();
 test.create('Forward authenticated login')
   .get('http://xxxcouchdb.local:1337/_users/org.couchdb.user%3Ahatter')
   .auth('hatter', 'unbirthday')
   .expectStatus(200)
+  .toss();
+test.create('Can\'t forge proxy auth')
+  .get('http://xxxcouchdb.local:1337/_active_tasks')
+  .addHeader('x-auth-couchdb-username','admin')
+  .addHeader('x-auth-couchdb-roles','_admin')
+  .expectStatus(401)
   .toss();
