@@ -55,7 +55,7 @@
     "authentication": [
       {"login": "hatter", "password": "unbirthday"}
     ],
-    "forwardedLoginHeader": "X-Auth-CouchDB-UserName",
+    "forwardedLoginSecret": "secretkeyforcouchdbauthtoken",
     "rules": [{
       "control": "true",
       "action": "authenticate(context,function(){proxyWork(context)})"
