@@ -75,7 +75,7 @@ function authenticate(context, callback, shouldNotCatch) {
           for (var newHeader in addedHeaders) {
             // since roles are forced to a value, the role header is given by couch-proxy-auth
             // so can't be forged
-            //removeHeader(context.options.headers,newHeader);
+            removeHeader(context.options.headers,newHeader);
             context.options.headers[newHeader] = addedHeaders[newHeader];
           }
         }
