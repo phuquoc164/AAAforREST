@@ -11,6 +11,9 @@ addons:
     - xcouchdb.local
     - xxcouchdb.local
     - xxxcouchdb.local
+    - auth_fixed.local
+    - auth_ldap.local
+    - auth_http.local
 install:
 - npm install
 - npm install -g jasmine-node
