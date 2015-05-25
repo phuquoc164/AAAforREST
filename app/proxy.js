@@ -9,6 +9,7 @@ var ldap = require('./authenticator.ldap');
 var basic = require('./authenticator.http');
 var cookie = require('./authenticator.cookie');
 var log = require('./accounter.log');
+var forwardAuth = require('couch-proxy-auth');
 
 configuration.sites.forEach(cookie.manageSession);
 
@@ -37,41 +38,51 @@ function tryAgain(context) {
 /*
  * Default implementation of checkCredentials (with fixed login and password)
  * that can be replaced for various authentication formats and protocols.
+ * Return true if the login was found.
+ * Set `context.auth.success` to true if the credentials were good.
  */
 var dummy = function(context, settings, callback) {
-  callback(context.login && context.login==settings.login && context.pw==settings.password);
+  if (context.auth.login==settings.login) {
+    context.auth.success = context.auth.password==settings.password;
+  }
+  callback(context.auth.success!==undefined);
 };
 
 function authenticateIfPresent(context, callback) {
-  var authenticationPresent=context.login ? true : false;
-  authenticate(context,callback,!authenticationPresent);
-};
+  authenticate(context, callback, context.auth===undefined);
+}
 
 function authenticate(context, callback, shouldNotCatch) {
     var authenticators = configuration.sites[context.conf].authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
-      if (authenticator.url) {
+      if (context.auth) {
         if (authenticator.dn) {
           ldap(context, authenticator, callback);
-        } else {
+        } else if (authenticator.url) {
           basic(context, authenticator, callback);
+        } else {
+          dummy(context, authenticator, callback);
         }
-      } else if (authenticator.hasOwnProperty("cookieName")) {
+      } else if (context.requestIn.headers.cookie) {
         cookie.check(context, authenticator, callback);
       } else {
-        dummy(context, authenticator, callback);
+        callback();
       }
-    }, function(successfulAuthenticator) {
-      if (successfulAuthenticator) {
-        if (!successfulAuthenticator.preserveCredentials) {
+    }, function(authenticator) {
+      if (context.auth && context.auth.success) {
+        if (!authenticator.preserveCredentials) {
           delete context.options.headers.Authorization;
         }
         var site=configuration.sites[context.conf];
-        if (site.forwardedLoginHeader && context.login) {
-          context.options.headers[site.forwardedLoginHeader] = context.login;
+        if (site.forwardedLoginHeader) {
+          context.options.headers[site.forwardedLoginHeader] = context.auth.login;
         }
-        if (site.forwardedLoginSecret && context.login) {
-          var addedHeaders=require('couch-proxy-auth')(context.login,site.forwardedLoginRoles || 'protect',site.forwardedLoginSecret);
+        if (site.forwardedLoginSecret) {
+          var addedHeaders = forwardAuth(
+            context.auth.login,
+            site.forwardedLoginRoles || 'protect',
+            site.forwardedLoginSecret
+          );
           for (var newHeader in addedHeaders) {
             // since roles are forced to a value, the role header is given by couch-proxy-auth
             // so can't be forged
@@ -79,9 +90,8 @@ function authenticate(context, callback, shouldNotCatch) {
             context.options.headers[newHeader] = addedHeaders[newHeader];
           }
         }
-        callback(successfulAuthenticator);
+        callback(true);
       } else {
-        delete context.login;
         //if authorization header is present, it means that preserveCredentials
         //is true, so we authorize to forward the request to upstream server
         if (context.options.headers.Authorization || shouldNotCatch) {
@@ -106,7 +116,7 @@ function authorize(context, callback) {
   var resourceMatch, userMatch;
   for (var uriPart in acl) {
     resourceMatch = context.requestIn.url.indexOf(uriPart) > -1;
-    userMatch =  acl[uriPart].indexOf(context.login) > -1;
+    userMatch =  acl[uriPart].indexOf(context.auth.login) > -1;
     if (resourceMatch) break;
   }
   if (resourceMatch && !userMatch) {
@@ -244,8 +254,10 @@ function parseHttpCredentials(context) {
     var token = authorization.split(" ");
     if (token[0]=='Basic' && token.length>1) {
       var credentials = new Buffer(token[1], 'base64').toString().split(':');
-      context.login = credentials[0];
-      context.pw = credentials.length>1 ? credentials[1] : "";
+      context.auth = {
+        login: credentials[0],
+        password: credentials.length>1 ? credentials[1] : ""
+      };
     }
   }
 }

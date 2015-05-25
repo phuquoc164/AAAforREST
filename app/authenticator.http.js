@@ -9,10 +9,13 @@ module.exports = function() {
       hostname: service.hostname,
       port: service.port || 80,
       path: service.path,
-      auth: context.login + ':' + context.pw
+      auth: context.auth.login + ':' + context.auth.password
     }, function(response) {
-      callback(response.statusCode=='200');
+      if (response.statusCode=='200') {
+        context.auth.success = true;
+      }
+      callback(context.auth.success);
     });
-  }
+  };
 
 }();

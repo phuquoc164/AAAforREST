@@ -20,9 +20,11 @@ function parseBody(context,sessionHandler) {
   var post=require("querystring").parse(context.options.body);
   var userfield=sessionHandler.userfield || "name";
   var passfield=sessionHandler.passfield || "password";
-  context.login=post[userfield] || "";
-  context.pw=post[passfield] || "";
-};
+  context.auth = {
+    login: post[userfield] || "",
+    password: post[passfield] || ""
+  };
+}
 
 function handleSessionRequest(sessionHandler) {
   var $=this;
@@ -56,7 +58,7 @@ function handleSessionRequest(sessionHandler) {
       });
       break;
     case "DELETE":
-      delete $.context.login;
+      delete $.context.auth;
       setAuthCookie($.context,sessionHandler);
       if (sessionHandler.forward) {
         $.proxyWork($.context);
@@ -69,10 +71,10 @@ function handleSessionRequest(sessionHandler) {
         if (sessionHandler.forward) {
           $.proxyWork($.context);
         } else {
-          var session={
-            name:$.context.login || null,
-            authenticator:authenticator
-          }
+          var session = {
+            name: $.context.auth.login || null,
+            authenticator: authenticator
+          };
           $.sendResponse($.context, 200, session);
         }
       });
@@ -134,8 +136,8 @@ function ignoreCookie(context,authenticator) {
 function checkAuthCookie(context,authenticator,callback) {
   var currcookie;
   authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
-  if (context.login || context.cookie && context.cookie.ignore
-    && context.cookie.ignore.indexOf(authenticator.cookieName) !=-1) {
+  if (context.auth || context.cookie && context.cookie.ignore
+    && context.cookie.ignore.indexOf(authenticator.cookieName)!==-1) {
     return callback(false);
   }
   var expiryTime=authenticator.sessionLength || defaultExpiryTime;
@@ -145,8 +147,11 @@ function checkAuthCookie(context,authenticator,callback) {
     if (auth_info=saved_cookies[currcookie]) {
       if (auth_info.timestamp<new Date().getTime()+expiryTime && auth_info.login) {
         auth_info.timestamp=new Date();
-        context.login=auth_info.login;
-        console.log("authenticating "+context.login+" through cookie "+currcookie);
+        context.auth = {
+          login: auth_info.login,
+          success: true
+        };
+        console.log("authenticating " + context.auth.login + " through cookie " + currcookie);
         return callback(true);
       } else {
         console.log("expired");
@@ -162,20 +167,21 @@ function checkAuthCookie(context,authenticator,callback) {
 
 function setAuthCookie(context,authenticator) {
   var currcookie;
+  var auth_info;
   authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
   var expiryTime=authenticator.sessionLength || defaultExpiryTime;
   var cookies=new Cookies(context.requestIn,context.responseOut);
   if (currcookie=cookies.get(authenticator.cookieName)) {
     if (auth_info=saved_cookies[currcookie]) {
-      if (context.login && auth_info.login!=context.login) {
+      if (context.auth && auth_info.login!==context.auth.login) {
         console.log("switching authentication from "+auth_info.login
-            +" to "+context.login);
+            + " to " + context.auth.login);
       }
     } else {
       auth_info={};
     }
     auth_info.timestamp=new Date().getTime();
-  } else if (context.login) {
+  } else if (context.auth) {
     var ok=false;
     while (!ok) {
       currcookie=crypto.createHash('sha1').update(authenticator.cookieName).update("plipplop"+new Date().getTime()).digest('hex');
@@ -185,9 +191,9 @@ function setAuthCookie(context,authenticator) {
     console.log("new session "+currcookie);
     auth_info={timestamp:new Date().getTime()}
   }
-  if (context.login) {
-    console.log("authenticating "+context.login);
-    auth_info.login=context.login;
+  if (context.auth) {
+    console.log("authenticating " + context.auth.login);
+    auth_info.login = context.auth.login;
     saved_cookies[currcookie]=auth_info;
   } else {
     if (currcookie) {
