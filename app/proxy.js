@@ -53,7 +53,9 @@ function authenticateIfPresent(context, callback) {
 }
 
 function authenticate(context, callback, shouldNotCatch) {
-    var authenticators = configuration.sites[context.conf].authentication;
+    var request = context.requestIn;
+    var site = configuration.site(request);
+    var authenticators = site.authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
       if (context.auth) {
         if (authenticator.dn) {
@@ -73,7 +75,6 @@ function authenticate(context, callback, shouldNotCatch) {
         if (!authenticator.preserveCredentials) {
           delete context.options.headers.Authorization;
         }
-        var site=configuration.sites[context.conf];
         if (site.forwardedLoginHeader) {
           context.options.headers[site.forwardedLoginHeader] = context.auth.login;
         }
@@ -112,7 +113,8 @@ function sendResponse(context, statusCode, message) {
  * Authorize access to restricted resources.
  */
 function authorize(context, callback) {
-  var acl = configuration.sites[context.conf].restricted;
+  var request = context.requestIn;
+  var acl = configuration.site(request).restricted;
   var resourceMatch, userMatch;
   for (var uriPart in acl) {
     resourceMatch = context.requestIn.url.indexOf(uriPart) > -1;
@@ -169,14 +171,14 @@ function addHeaders(response,headers) {
 // Main proxy function that forward the request and the related answers
 
 function proxyWork(context) {
+  var request = context.requestIn;
+  var site = configuration.site(request);
   if (!context.requestIn.readable) {
     if (context.options.body && typeof context.options.body =='string')
       context.options.headers['Content-Length']=context.options.body.length;
     else
       delete context.options.headers['Content-Length'];
   }
-
-  var site = configuration.sites[context.conf];
 
   var requestOut = http.request(context.options, function(responseIn) {
     if (responseIn.headers.location && site.hideLocationParts) {
@@ -229,25 +231,6 @@ function proxyWork(context) {
   });
 }
 
-// Function that allow to find the index of the requested server inside config.json
-
-var matching = function(host){
-  var verif = false;
-  var i =0;
-  while ((verif == false) && (i < configuration.sites.length)){
-    var site_host = configuration.sites[i].hostProxy;
-    var re = new RegExp(site_host, "i");
-    verif = re.test(host);
-    if (!verif) {
-      re = new RegExp(site_host + ":" + configuration.port, "i");
-      verif = re.test(host);
-    }
-    if (verif == false)i++;
-  }
-  if (verif == false ) i = -1;
-  return i;
-};
-
 function parseHttpCredentials(context) {
   var authorization = context.requestIn.headers.authorization;
   if (authorization) {
@@ -294,12 +277,10 @@ app.use(function(requestIn, responseOut, next) {
 
   domain.run(function() {
 
-  var index = matching(requestIn.headers.host);
-  if(index == -1){
+  var site = configuration.site(requestIn);
+  if (site===null) {
     sendResponse(context, 404, "Not Found");
-  }else{
-    context.conf = index;
-    var site = configuration.sites[index];
+  } else {
     context.options = {
       host: site.host || 'localhost',
       port: site.port || 80,

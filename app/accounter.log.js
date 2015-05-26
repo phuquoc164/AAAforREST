@@ -18,7 +18,7 @@ module.exports = function() {
 
   return function(context, err, code) {
     var request = context.requestIn;
-    var site = configuration.sites[context.conf];
+    var site = configuration.site(request);
     var logger = loggers.get(site?site.hostProxy:'misc');
     logger.info(
       (context.auth? context.auth.login + '@' : '')
