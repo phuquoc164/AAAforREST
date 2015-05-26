@@ -16,13 +16,13 @@ module.exports = function() {
     },
     get: function(url, id) {
       console.log('CACHE got');
-      return this[url, id];
+      return this[url]? this[url][id] : null;
     },
     remove: function(url, id) {
       console.log('CACHE removed');
-      delete cache[url][id];
-      if (cache[url]==={}) {
-        delete cache[url];
+      delete this[url][id];
+      if (this[url]==={}) {
+        delete this[url];
       }
     }
   };
