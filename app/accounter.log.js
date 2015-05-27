@@ -21,7 +21,7 @@ module.exports = function() {
     var site = configuration.site(request);
     var logger = loggers.get(site?site.hostProxy:'misc');
     logger.info(
-      (context.auth? context.auth.login + '@' : '')
+      (request.auth? request.auth.login + '@' : '')
       + (request.headers['x-forwarded-for'] || request.connection.remoteAddress)
       + '\t' + request.method 
       + '\t' + request.headers.host + request.url 

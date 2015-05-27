@@ -17,10 +17,11 @@ function readBody(context,callback) {
 }
 
 function parseBody(context,sessionHandler) {
+  var request = context.requestIn;
   var post=require("querystring").parse(context.options.body);
   var userfield=sessionHandler.userfield || "name";
   var passfield=sessionHandler.passfield || "password";
-  context.auth = {
+  request.auth = {
     login: post[userfield] || "",
     password: post[passfield] || ""
   };
@@ -58,7 +59,7 @@ function handleSessionRequest(sessionHandler) {
       });
       break;
     case "DELETE":
-      delete $.context.auth;
+      delete $.context.requestIn.auth;
       setAuthCookie($.context,sessionHandler);
       if (sessionHandler.forward) {
         $.proxyWork($.context);
@@ -72,7 +73,7 @@ function handleSessionRequest(sessionHandler) {
           $.proxyWork($.context);
         } else {
           var session = {
-            name: $.context.auth.login || null,
+            name: $.context.requestIn.auth.login || null,
             authenticator: authenticator
           };
           $.sendResponse($.context, 200, session);
@@ -134,9 +135,10 @@ function ignoreCookie(context,authenticator) {
 }
 
 function checkAuthCookie(context,authenticator,callback) {
+  var request = context.requestIn;
   var currcookie;
   authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
-  if (context.auth || context.cookie && context.cookie.ignore
+  if (request.auth || context.cookie && context.cookie.ignore
     && context.cookie.ignore.indexOf(authenticator.cookieName)!==-1) {
     return callback(false);
   }
@@ -147,11 +149,11 @@ function checkAuthCookie(context,authenticator,callback) {
     if (auth_info=saved_cookies[currcookie]) {
       if (auth_info.timestamp<new Date().getTime()+expiryTime && auth_info.login) {
         auth_info.timestamp=new Date();
-        context.auth = {
+        request.auth = {
           login: auth_info.login,
           success: true
         };
-        console.log("authenticating " + context.auth.login + " through cookie " + currcookie);
+        console.log("authenticating " + request.auth.login + " through cookie " + currcookie);
         return callback(true);
       } else {
         console.log("expired");
@@ -166,6 +168,7 @@ function checkAuthCookie(context,authenticator,callback) {
 }
 
 function setAuthCookie(context,authenticator) {
+  var request = context.requestIn;
   var currcookie;
   var auth_info;
   authenticator.cookieName=authenticator.cookieName || default_cookie_auth_name;
@@ -173,15 +176,15 @@ function setAuthCookie(context,authenticator) {
   var cookies=new Cookies(context.requestIn,context.responseOut);
   if (currcookie=cookies.get(authenticator.cookieName)) {
     if (auth_info=saved_cookies[currcookie]) {
-      if (context.auth && auth_info.login!==context.auth.login) {
+      if (request.auth && auth_info.login!==request.auth.login) {
         console.log("switching authentication from "+auth_info.login
-            + " to " + context.auth.login);
+            + " to " + request.auth.login);
       }
     } else {
       auth_info={};
     }
     auth_info.timestamp=new Date().getTime();
-  } else if (context.auth) {
+  } else if (request.auth) {
     var ok=false;
     while (!ok) {
       currcookie=crypto.createHash('sha1').update(authenticator.cookieName).update("plipplop"+new Date().getTime()).digest('hex');
@@ -191,9 +194,9 @@ function setAuthCookie(context,authenticator) {
     console.log("new session "+currcookie);
     auth_info={timestamp:new Date().getTime()}
   }
-  if (context.auth) {
-    console.log("authenticating " + context.auth.login);
-    auth_info.login = context.auth.login;
+  if (request.auth) {
+    console.log("authenticating " + request.auth.login);
+    auth_info.login = request.auth.login;
     saved_cookies[currcookie]=auth_info;
   } else {
     if (currcookie) {

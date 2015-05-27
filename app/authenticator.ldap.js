@@ -30,16 +30,17 @@ module.exports = function() {
   };
 
   return function(context, settings, callback) {
+    var request = context.requestIn;
     var url = settings.url;
-    var ldapReq = settings.id + '=' + context.auth.login + ',' + settings.dn;
+    var ldapReq = settings.id + '=' + request.auth.login + ',' + settings.dn;
     var id = CRYPTO.createHash('sha1')
       .update(url)
       .update(ldapReq)
-      .update(context.auth.password || "")
+      .update(request.auth.password || "")
       .digest('hex');
     var cachedValue = cache.get(url, id);
     if (cachedValue) {
-      context.auth.success = cachedValue.success;
+      request.auth.success = cachedValue.success;
       callback(true);
     } else {
       var ldap = LDAP.createClient({url: url});
@@ -51,8 +52,8 @@ module.exports = function() {
             callback(false);
           });
           res.on('searchEntry', function() {
-            ldap.bind(ldapReq, context.auth.password, function(err) {
-              context.auth.success = !err;
+            ldap.bind(ldapReq, request.auth.password, function(err) {
+              request.auth.success = !err;
               cache.set(url, id, err);
               if (!err) {
                 ldap.unbind();

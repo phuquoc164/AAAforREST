@@ -5,16 +5,17 @@ module.exports = function() {
 
   return function(context, settings, callback) {
     var service = url.parse(settings.url);
+    var request = context.requestIn;
     http.get({
       hostname: service.hostname,
       port: service.port || 80,
       path: service.path,
-      auth: context.auth.login + ':' + context.auth.password
+      auth: request.auth.login + ':' + request.auth.password
     }, function(response) {
       if (response.statusCode=='200') {
-        context.auth.success = true;
+        request.auth.success = true;
       }
-      callback(context.auth.success);
+      callback(request.auth.success);
     });
   };
 

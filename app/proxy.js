@@ -39,17 +39,19 @@ function tryAgain(context) {
  * Default implementation of checkCredentials (with fixed login and password)
  * that can be replaced for various authentication formats and protocols.
  * Return true if the login was found.
- * Set `context.auth.success` to true if the credentials were good.
+ * Set `request.auth.success` to true if the credentials were good.
  */
 var dummy = function(context, settings, callback) {
-  if (context.auth.login==settings.login) {
-    context.auth.success = context.auth.password==settings.password;
+  var request = context.requestIn;
+  if (request.auth.login==settings.login) {
+    request.auth.success = request.auth.password==settings.password;
   }
-  callback(context.auth.success!==undefined);
+  callback(request.auth.success!==undefined);
 };
 
 function authenticateIfPresent(context, callback) {
-  authenticate(context, callback, context.auth===undefined);
+  var request = context.requestIn;
+  authenticate(context, callback, request.auth===undefined);
 }
 
 function authenticate(context, callback, shouldNotCatch) {
@@ -57,7 +59,7 @@ function authenticate(context, callback, shouldNotCatch) {
     var site = configuration.site(request);
     var authenticators = site.authentication;
     async.detectSeries(authenticators, function(authenticator, callback) {
-      if (context.auth) {
+      if (request.auth) {
         if (authenticator.dn) {
           ldap(context, authenticator, callback);
         } else if (authenticator.url) {
@@ -71,16 +73,16 @@ function authenticate(context, callback, shouldNotCatch) {
         callback();
       }
     }, function(authenticator) {
-      if (context.auth && context.auth.success) {
+      if (request.auth && request.auth.success) {
         if (!authenticator.preserveCredentials) {
           delete context.options.headers.Authorization;
         }
         if (site.forwardedLoginHeader) {
-          context.options.headers[site.forwardedLoginHeader] = context.auth.login;
+          context.options.headers[site.forwardedLoginHeader] = request.auth.login;
         }
         if (site.forwardedLoginSecret) {
           var addedHeaders = forwardAuth(
-            context.auth.login,
+            request.auth.login,
             site.forwardedLoginRoles || 'protect',
             site.forwardedLoginSecret
           );
@@ -118,7 +120,7 @@ function authorize(context, callback) {
   var resourceMatch, userMatch;
   for (var uriPart in acl) {
     resourceMatch = context.requestIn.url.indexOf(uriPart) > -1;
-    userMatch =  acl[uriPart].indexOf(context.auth.login) > -1;
+    userMatch =  acl[uriPart].indexOf(request.auth.login) > -1;
     if (resourceMatch) break;
   }
   if (resourceMatch && !userMatch) {
@@ -232,12 +234,13 @@ function proxyWork(context) {
 }
 
 function parseHttpCredentials(context) {
-  var authorization = context.requestIn.headers.authorization;
+  var request = context.requestIn;
+  var authorization = request.headers.authorization;
   if (authorization) {
     var token = authorization.split(" ");
     if (token[0]=='Basic' && token.length>1) {
       var credentials = new Buffer(token[1], 'base64').toString().split(':');
-      context.auth = {
+      request.auth = {
         login: credentials[0],
         password: credentials.length>1 ? credentials[1] : ""
       };
