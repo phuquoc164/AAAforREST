@@ -19,10 +19,12 @@ module.exports = function() {
       return this[url]? this[url][id] : null;
     },
     remove: function(url, id) {
-      console.log('CACHE removed');
-      delete this[url][id];
-      if (this[url]==={}) {
-        delete this[url];
+      if (this[url]) {
+        console.log('CACHE removed');
+        delete this[url][id];
+        if (this[url]==={}) {
+          delete this[url];
+        }
       }
     }
   };
