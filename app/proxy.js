@@ -39,14 +39,13 @@ function tryAgain(context) {
  * Default implementation of checkCredentials (with fixed login and password)
  * that can be replaced for various authentication formats and protocols.
  * Return true if the login was found.
- * Set `request.auth.success` to true if the credentials were good.
+ * Set `auth.success` to true if the credentials were good.
  */
-var dummy = function(context, settings, callback) {
-  var request = context.requestIn;
-  if (request.auth.login==settings.login) {
-    request.auth.success = request.auth.password==settings.password;
+var dummy = function(auth, settings, callback) {
+  if (auth.login==settings.login) {
+    auth.success = auth.password==settings.password;
   }
-  callback(request.auth.success!==undefined);
+  callback(auth.success!==undefined);
 };
 
 function authenticateIfPresent(context, callback) {
@@ -61,11 +60,11 @@ function authenticate(context, callback, shouldNotCatch) {
     async.detectSeries(authenticators, function(authenticator, callback) {
       if (request.auth) {
         if (authenticator.dn) {
-          ldap(context, authenticator, callback);
+          ldap(request.auth, authenticator, callback);
         } else if (authenticator.url) {
-          basic(context, authenticator, callback);
+          basic(request.auth, authenticator, callback);
         } else {
-          dummy(context, authenticator, callback);
+          dummy(request.auth, authenticator, callback);
         }
       } else if (context.requestIn.headers.cookie) {
         cookie.check(context, authenticator, callback);
