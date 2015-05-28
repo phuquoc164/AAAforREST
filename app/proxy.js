@@ -1,6 +1,8 @@
 var express = require('express');
 var vhost = require('vhost');
 var proxy = require('express-http-proxy');
+var bodyParser = require('body-parser');
+var session = require('express-session');
 var http = require('http');
 var url = require('url');
 var async = require('async');
@@ -247,9 +249,169 @@ function parseHttpCredentials(context) {
   }
 }
 
+/**
+ * @implement Express middleware.
+ */
+function parseFormAuthentication(request, response, next) {
+  if (!request.auth) {
+    var form = request.body;
+    if (form.name && form.password) {
+      request.auth = {
+        login: form.name,
+        password: form.password
+      };
+    }
+  }
+  next();
+}
+
+/**
+ * @implement Express middleware.
+ */
+function checkCookieAuthentication(request, response, next) {
+  if (!request.auth && request.session && request.session.login) {
+    request.auth = {
+      login: request.session.login,
+      success: true
+    };
+  }
+  next();
+}
+
+/**
+ * @implement Express middleware.
+ */
+function continueIfAuthentified(request, response, next) {
+  if (request.auth && request.auth.success) {
+    next();
+  } else {
+    response.sendStatus(401);
+  }
+}
+
+function ok(request, response, next) {
+  var o = {ok: true};
+  if (request.auth) {
+    o.name = request.auth.login;
+  }
+  response.json(o);
+}
+
+/**
+ * @return middleware that checks login and password against
+ * a single HTTP URI with basic authentication.
+ */
+function checkAuthenticationOnHTTP(authenticator) {
+  return function(request, response, next) {
+    if (request.auth) {
+      basic(request.auth, authenticator, function() {
+        next();
+      });
+    } else {
+      next();
+    }
+  };
+}
+
+/**
+ * @return middleware that checks login and password against
+ * an LDAP directory.
+ */
+function checkAuthenticationOnLDAP(authenticator) {
+  return function(request, response, next) {
+    if (request.auth) {
+      ldap(request.auth, authenticator, function() {
+        next();
+      });
+    } else {
+      next();
+    }
+  };
+}
+
+/**
+ * @return middleware that checks login and password against
+ * a given login and password
+ */
+function checkAuthenticationOnFixed(authenticator) {
+  return function(request, response, next) {
+    if (request.auth) {
+      dummy(request.auth, authenticator, function(authentified) {
+        next();
+      });
+    } else {
+      next();
+    }
+  };
+}
+
+/**
+ * @return middleware that checks login and password against
+ * the authenticator according to its type.
+ */
+function checkAuthentication(authenticator) {
+  if (authenticator.dn)
+    return checkAuthenticationOnLDAP(authenticator);
+  if (authenticator.url)
+    return checkAuthenticationOnHTTP(authenticator);
+  return checkAuthenticationOnFixed(authenticator);
+}
+
+var setSession = session({
+  secret: 's3cr3t'+ new Date(),
+  resave: false,
+  saveUninitialized: false,
+  unset: 'destroy',
+  cookie: {
+    domain: configuration.domain
+  }
+});
+
+function setSessionLogin(request, response, next) {
+  request.session.login = request.auth.login;
+  next();
+}
+
+function unsetSessionLogin(request, response, next) {
+  request.session = null;
+  request.auth = null;
+  next();
+}
+
+function continueIfForm(request, response, next) {
+  var type = request.headers['content-type'];
+  if (!type || type.indexOf('application/x-www-form-urlencode')!==0) {
+    return response.sendStatus(415);
+  }
+  next();
+}
+
 var userApp = express.Router();
 userApp.use(express.static('public'));
-userApp.route('/_users/*').all(proxy(configuration.users || 'localhost:5984'));
+userApp.route('/_users/*').all(
+  proxy(configuration.users || 'localhost:5984')
+);
+userApp.route('/_session')
+  .post(
+    unsetSessionLogin,
+    continueIfForm,
+    bodyParser.urlencoded({extended: false}),
+    parseFormAuthentication,
+    checkAuthentication(configuration.authentication), //TODO multiple sources
+    continueIfAuthentified,
+    setSession,
+    setSessionLogin,
+    ok
+  ).get(
+    setSession,
+    checkCookieAuthentication,
+    ok
+  ).delete(
+    setSession,
+    checkCookieAuthentication,
+    unsetSessionLogin,
+    ok
+  );
 
 var app = express();
 app.use(vhost('auth.*', userApp));

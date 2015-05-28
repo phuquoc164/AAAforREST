@@ -1,5 +1,7 @@
 {
   "port": 1337,
+  "authentication": {"login": "alice", "password": "whiterabbit"},
+  "domain": "local",
   "sites": [{
     "hostProxy": "cassandre.local",
     "port": 5984,
