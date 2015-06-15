@@ -1,7 +1,7 @@
 {
   "name": "AAAforREST",
   "description": "An HTTP reverse proxy to bring authentication, authorization and accounting to RESTful applications",
-  "version": "1.2015.0430",
+  "version": "1.2015.0615",
   "dependencies": {
     "express": ">=4.9",
     "vhost": ">=2.0",
