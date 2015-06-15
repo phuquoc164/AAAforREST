@@ -48,6 +48,7 @@ module.exports = function() {
           callback(false);
         } else {
           res.on('error', function(err) { // ldap error including 'not found'
+            ldap.socket.end();
             callback(false);
           });
           res.on('searchEntry', function() {
@@ -55,7 +56,9 @@ module.exports = function() {
               auth.success = !err;
               cache.set(url, id, err);
               if (!err) {
-                ldap.unbind();
+                ldap.unbind(function() {
+                  ldap.socket.end();
+                });
               }
               callback(true);
             });

@@ -201,6 +201,7 @@ function proxyWork(context) {
     });
     responseIn.on('end', function() {
       context.responseOut.end();
+      responseIn.socket.end();
     });
   });
 
