@@ -243,8 +243,8 @@ function parseHttpCredentials(context) {
     if (token[0]=='Basic' && token.length>1) {
       var credentials = new Buffer(token[1], 'base64').toString().split(':');
       request.auth = {
-        login: credentials[0],
-        password: credentials.length>1 ? credentials[1] : ""
+        login: credentials.shift(),
+        password: credentials.join(":")
       };
     }
   }
