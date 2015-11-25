@@ -48,7 +48,8 @@ module.exports = function() {
           callback(false);
         } else {
           res.on('error', function(err) { // ldap error including 'not found'
-            ldap.socket.end();
+            if(ldap.socket != undefined)
+              ldap.socket.end();
             callback(false);
           });
           res.on('searchEntry', function() {
@@ -57,7 +58,8 @@ module.exports = function() {
               cache.set(url, id, err);
               if (!err) {
                 ldap.unbind(function() {
-                  ldap.socket.end();
+                  if(ldap.socket != undefined)
+                    ldap.socket.end();
                 });
               }
               callback(true);
