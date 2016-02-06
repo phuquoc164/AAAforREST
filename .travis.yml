@@ -35,7 +35,7 @@ install:
 - cp conf/config.sample.json conf/config.json
 - mkdir log/
 - touch log/misc.log
-- node app/proxy.js &
+- npm start
 # Install CouchApp
 - pip install --user couchapp
 # Install Capybara
@@ -54,5 +54,5 @@ install:
 - curl -X PUT localhost:5984/_users/org.couchdb.user:hatter -H 'Accept:application/json' -H 'Content-Type:application/json' -d '{"name":"hatter", "password":"teaparty", "roles":[], "type":"user"}'
 - curl -X PUT localhost:5984/_config/admins/carroll -d '"curiouser"'
 script:
-- jasmine-node --verbose spec/api/
+- jasmine-node spec/api/
 - xvfb-run rspec spec/features/*

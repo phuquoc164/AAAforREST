@@ -18,8 +18,6 @@ Installation requirements
 Installation procedure
 ----------------------
 
-    sudo npm install forever -g
-
 * In any folder:
 
         git clone https://github.com/Hypertopic/AAAforREST.git
@@ -31,12 +29,12 @@ Installation procedure
 * Change settings in `config.js`.
 * Test the settings (`sudo` is required for port 80):
 
-        sudo node app/proxy.js
+        sudo npm test
 
 * Exit the program (`CTRL`+`C`) and start it as a service:
 
-        sudo forever start app/proxy.js
+        sudo npm start
 
 * The service can be stopped with:
 
-        sudo forever stop app/proxy.js
+        sudo npm stop
