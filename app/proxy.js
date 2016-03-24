@@ -18,8 +18,10 @@ configuration.sites.forEach(cookie.manageSession);
 
 function act(context, toDo) {
   var method = context.requestIn.method,
+    login = (context.requestIn.auth)? context.requestIn.auth.login||'' : '',
     path = url.parse(context.requestIn.url).path;
   var scope = {
+    login: login,
     method: method,
     path: path,
     authenticate: authenticate,
@@ -27,6 +29,7 @@ function act(context, toDo) {
     authorize: authorize,
     proxyWork: proxyWork,
     sendResponse: sendResponse,
+    tryAgain: tryAgain,
     context: context
   };
   return typeof toDo == 'function' && toDo.call(scope) || eval(toDo);
