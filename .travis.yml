@@ -30,7 +30,7 @@ addons:
     - auth_http.local
 
 install:
-- rvm install 2.2
+- rvm install 2.2.2
 - npm install
 - npm install -g jasmine-node
 - npm install frisby
