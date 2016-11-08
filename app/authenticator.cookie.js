@@ -46,6 +46,7 @@ function handleSessionRequest(sessionHandler) {
               $.sendResponse($.context, 200, {ok: true});
             }
           } else {
+            delete $.context.requestIn.auth;
             setAuthCookie($.context,sessionHandler);
             if(sessionHandler.forward) {
               if (!sessionHandler.preserveCredentials)
