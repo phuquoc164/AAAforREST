@@ -5,7 +5,6 @@ module.exports = function() {
 
   var cache = {
     set: function(url, id, err) {
-      console.log('CACHE set');
       if (!this[url]) {
         this[url] = {};
       }
@@ -15,12 +14,10 @@ module.exports = function() {
       };
     },
     get: function(url, id) {
-      console.log('CACHE got');
       return this[url]? this[url][id] : null;
     },
     remove: function(url, id) {
       if (this[url]) {
-        console.log('CACHE removed');
         delete this[url][id];
         if (this[url]==={}) {
           delete this[url];
@@ -28,6 +25,15 @@ module.exports = function() {
       }
     }
   };
+
+  function closeSocket(ldap) {
+    if(ldap.socket != undefined) {//older ldapjs version
+      ldap.socket.end();
+    }
+    if(ldap._socket != undefined) { //newer ldapjs version
+      ldap._socket.end();
+    }
+  }
 
   return function(auth, settings, callback) {
     var url = settings.url;
@@ -48,20 +54,14 @@ module.exports = function() {
           callback(false);
         } else {
           res.on('error', function(err) { // ldap error including 'not found'
-            if(ldap.socket != undefined)
-              ldap.socket.end();
+            closeSocket(ldap);
             callback(false);
           });
           res.on('searchEntry', function() {
             ldap.bind(ldapReq, auth.password, function(err) {
               auth.success = !err;
               cache.set(url, id, err);
-              if (!err) {
-                ldap.unbind(function() {
-                  if(ldap.socket != undefined)
-                    ldap.socket.end();
-                });
-              }
+              closeSocket(ldap);
               callback(true);
             });
           });
