@@ -5,7 +5,7 @@ module.exports = function() {
 
   return function(auth, settings, callback) {
     var service = url.parse(settings.url);
-    http.get({
+    var request=http.get({
       hostname: service.hostname,
       port: service.port || 80,
       path: service.path,
@@ -14,6 +14,8 @@ module.exports = function() {
       if (response.statusCode=='200') {
         auth.success = true;
       }
+      if (request.socket)
+        request.socket.end();
       callback(auth.success);
     });
   };
