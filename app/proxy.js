@@ -390,35 +390,37 @@ function continueIfForm(request, response, next) {
   next();
 }
 
-var userApp = express.Router();
-userApp.use(express.static('public'));
-userApp.route('/_users/*').all(
-  proxy(configuration.users || 'localhost:5984')
-);
-userApp.route('/_session')
-  .post(
-    unsetSessionLogin,
-    continueIfForm,
-    bodyParser.urlencoded({extended: false}),
-    parseFormAuthentication,
-    checkAuthentication(configuration.authentication), //TODO multiple sources
-    continueIfAuthentified,
-    setSession,
-    setSessionLogin,
-    ok
-  ).get(
-    setSession,
-    checkCookieAuthentication,
-    ok
-  ).delete(
-    setSession,
-    checkCookieAuthentication,
-    unsetSessionLogin,
-    ok
-  );
-
 var app = express();
-app.use(vhost('auth.*', userApp));
+
+if (configuration.domain && configuration.authentication) {
+  var userApp = express.Router();
+  userApp.use(express.static('public'));
+  userApp.route('/_users/*').all(
+    proxy(configuration.users || 'localhost:5984')
+  );
+  userApp.route('/_session')
+    .post(
+      unsetSessionLogin,
+      continueIfForm,
+      bodyParser.urlencoded({extended: false}),
+      parseFormAuthentication,
+      checkAuthentication(configuration.authentication), //TODO multiple sources
+      continueIfAuthentified,
+      setSession,
+      setSessionLogin,
+      ok
+    ).get(
+      setSession,
+      checkCookieAuthentication,
+      ok
+    ).delete(
+      setSession,
+      checkCookieAuthentication,
+      unsetSessionLogin,
+      ok
+    );
+  app.use(vhost('auth.*', userApp));
+}
 
 app.use(function(requestIn, responseOut, next) {
   var context = {
