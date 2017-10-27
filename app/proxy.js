@@ -419,7 +419,7 @@ if (configuration.domain && configuration.authentication) {
       unsetSessionLogin,
       ok
     );
-  app.use(vhost('auth.*', userApp));
+  app.use(vhost('auth.' + configuration.domain, userApp));
 }
 
 app.use(function(requestIn, responseOut, next) {
