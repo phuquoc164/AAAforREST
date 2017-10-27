@@ -5,11 +5,9 @@ Capybara.run_server = false
 Capybara.default_driver = :webkit
 Capybara.app_host = 'http://auth.local:1337'
 
-RSpec.configure do |config|
-  config.before(:each) do
-    page.driver.allow_url 'auth.local'
-    page.driver.allow_url 'couchdb.local'
-  end
+Capybara::Webkit.configure do |config|
+  config.allow_url 'auth.local'
+  config.allow_url 'couchdb.local'
 end
 
 def a_string()
