@@ -12,6 +12,7 @@ var basic = require('./authenticator.http');
 var cookie = require('./authenticator.cookie');
 var log = require('./accounter.log');
 var forwardAuth = require('couch-proxy-auth');
+var cors = require('cors');
 
 configuration.sites.forEach(cookie.manageSession);
 
@@ -394,6 +395,7 @@ var app = express();
 
 if (configuration.domain && configuration.authentication) {
   var userApp = express.Router();
+  userApp.use(cors());
   userApp.use(express.static('public'));
   userApp.route('/_users/*').all(
     proxy(configuration.users || 'localhost:5984')
