@@ -32,8 +32,6 @@ addons:
 install:
 - rvm install 2.2.2
 - npm install
-- npm install -g jasmine-node
-- npm install frisby
 - cp conf/config.sample.json conf/config.json
 - mkdir log/
 - touch log/misc.log

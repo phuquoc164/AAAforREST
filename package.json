@@ -14,5 +14,9 @@
     "async": ">=0.9.x",
     "cookies": ">=0.5",
     "couch-proxy-auth": ">=1.0.1"
+  },
+  "devDependencies": {
+    "frisby": "^0.8.5",
+    "jasmine-node": "^1.14.5"
   }
 }
