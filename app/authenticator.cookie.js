@@ -73,11 +73,9 @@ function handleSessionRequest(sessionHandler) {
         if (sessionHandler.forward) {
           $.proxyWork($.context);
         } else {
-          var session = {
-            name: $.context.requestIn.auth.login || null,
-            authenticator: authenticator
-          };
-          $.sendResponse($.context, 200, session);
+          var auth =  $.context.requestIn.auth;
+          var name = (auth)? auth.login : null;
+          $.sendResponse($.context, 200, {name});
         }
       });
       break;
