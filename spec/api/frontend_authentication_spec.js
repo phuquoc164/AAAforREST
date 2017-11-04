@@ -26,6 +26,27 @@ test.create('Site cookie authentication')
               .get('http://cassandre.local:1337/text/Wonderland/')
               .addHeader('Cookie', cookie)
               .expectStatus(200)
+              .after(function() {
+                test.create('Cookie deletion')
+                  .delete('http://cassandre.local:1337/_session')
+                  .addHeader('Cookie', cookie)
+                  .expectStatus(200)
+                  .after(function() {
+                    test.create('Cookie information')
+                      .get('http://cassandre.local:1337/_session')
+                      .addHeader('Cookie', cookie)
+                      .expectJSON({name: null})
+                      .after(function() {
+                        test.create('Cookie use')
+                          .get('http://cassandre.local:1337/text/Wonderland/')
+                          .addHeader('Cookie', cookie)
+                          .expectStatus(401)
+                          .toss();
+                      })
+                      .toss();
+                  })
+                  .toss();
+              })
               .toss();
           })
           .toss();
@@ -68,6 +89,7 @@ test.create('Domain cookie connection with valid credentials')
       .toss();
   })
   .toss() ;
+
 test.create('Domain cookie creation with invalid credentials')
   .post('http://auth.local:1337/_session', {name:'alice', password:'rabbit'})
   .addHeader('Content-Type', 'application/x-www-form-urlencoded')
