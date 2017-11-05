@@ -7,15 +7,15 @@ language:
 - ruby
 - python
 
-node_js: stable
+node_js: 8
 rvm: ruby-head
 python: 2.7
 
 cache:
   directories:
   - node_modules
-  - $HOME/.cache/pip/
-
+  - ~/.rvm/gems
+  - ~/.local
 
 addons:
   hosts:
@@ -30,7 +30,6 @@ addons:
     - auth_http.local
 
 install:
-- rvm install 2.2.2
 - npm install
 - cp conf/config.sample.json conf/config.json
 - mkdir log/
