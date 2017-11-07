@@ -6,7 +6,7 @@ test.create('HTTP basic authentication')
   .expectStatus(200)
   .toss();
 
-test.create('Site cookie authentication')
+test.create('Site cookie authentication with valid credentials')
   .get('http://cassandre.local:1337/_session')
   .expectStatus(200)
   .expectJSON({name: null})
@@ -53,6 +53,12 @@ test.create('Site cookie authentication')
       })
       .toss();
   })
+  .toss();
+
+test.create('Site cookie authentication with invalid credentials')
+  .post('http://cassandre.local:1337/_session', {name:'alice', password:'rabbit'})
+  .addHeader('Content-Type', 'application/x-www-form-urlencoded')
+  .expectStatus(401)
   .toss();
 
 test.create('Domain cookie connection with valid credentials')
