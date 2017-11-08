@@ -59,6 +59,9 @@ test.create('Site cookie authentication with invalid credentials')
   .post('http://cassandre.local:1337/_session', {name:'alice', password:'rabbit'})
   .addHeader('Content-Type', 'application/x-www-form-urlencoded')
   .expectStatus(401)
+  .after(function(error, resource) {
+    expect(resource.headers['set-cookie']).not.toBeDefined();
+  })
   .toss();
 
 test.create('Domain cookie connection with valid credentials')
@@ -100,4 +103,7 @@ test.create('Domain cookie creation with invalid credentials')
   .post('http://auth.local:1337/_session', {name:'alice', password:'rabbit'})
   .addHeader('Content-Type', 'application/x-www-form-urlencoded')
   .expectStatus(401)
+  .after(function(error, resource) {
+    expect(resource.headers['set-cookie']).not.toBeDefined();
+  })
   .toss();
