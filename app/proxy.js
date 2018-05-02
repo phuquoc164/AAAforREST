@@ -112,6 +112,7 @@ function authenticate(context, callback, shouldNotCatch) {
 }
 
 function sendResponse(context, statusCode, message) {
+  addOriginIfAny(context);
   log(context, 'HTTP', statusCode);
   context.responseOut.status(statusCode).send(message);
 }
@@ -172,6 +173,13 @@ function addHeaders(response,headers) {
       value=[value].concat(existingHeader);
     }
     response.setHeader(header,value);
+  }
+}
+
+function addOriginIfAny(context) {
+  var siteSettings = configuration.site(context.requestIn);
+  if (siteSettings && siteSettings.origin) {
+    context.responseOut.setHeader('Access-Control-Allow-Origin', siteSettings.origin);
   }
 }
 

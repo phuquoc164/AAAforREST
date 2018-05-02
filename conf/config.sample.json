@@ -7,6 +7,7 @@
     "port": 5984,
     "path": "/cassandre/_design/cassandre/_rewrite",
     "hideLocationParts": 1,
+    "origin": "*",
     "authentication": [
       {"login": "alice", "password": "whiterabbit"},
       {"login": "mrwhite", "password": "alice"},

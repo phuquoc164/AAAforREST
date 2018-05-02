@@ -55,3 +55,7 @@ test.create('Can\'t forge proxy auth')
   .addHeader('x-auth-couchdb-roles','_admin')
   .expectStatus(401)
   .toss();
+test.create('CORS site policy')
+  .get('http://cassandre.local:1337/_session')
+  .expectHeader('Access-Control-Allow-Origin', '*')
+  .toss();
