@@ -42,9 +42,9 @@ install:
 # Install Cassandre
 - curl -X PUT -d '"false"' localhost:5984/_config/httpd/secure_rewrites
 - curl -X PUT localhost:5984/cassandre
-- wget https://github.com/Hypertopic/Cassandre/archive/master.zip
-- unzip master.zip
-- couchapp push Cassandre-master http://localhost:5984/cassandre
+- wget https://github.com/Hypertopic/Cassandre/archive/v2.zip
+- unzip v2.zip
+- couchapp push Cassandre-2 http://localhost:5984/cassandre
 # Set up test fixture
 - curl -X PUT -d '"{couch_httpd_auth, cookie_authentication_handler}, {couch_httpd_auth, proxy_authentication_handler}, {couch_httpd_auth, default_authentication_handler}"' localhost:5984/_config/httpd/authentication_handlers
 - curl -X PUT -d'"true"' localhost:5984/_config/couch_httpd_auth/proxy_use_secret
