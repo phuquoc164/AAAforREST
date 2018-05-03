@@ -180,6 +180,7 @@ function addOriginIfAny(context) {
   var siteSettings = configuration.site(context.requestIn);
   if (siteSettings && siteSettings.origin) {
     context.responseOut.setHeader('Access-Control-Allow-Origin', siteSettings.origin);
+    context.responseOut.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 }
 

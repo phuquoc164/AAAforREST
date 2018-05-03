@@ -58,4 +58,5 @@ test.create('Can\'t forge proxy auth')
 test.create('CORS site policy')
   .get('http://cassandre.local:1337/_session')
   .expectHeader('Access-Control-Allow-Origin', '*')
+  .expectHeader('Access-Control-Allow-Credentials', 'true')
   .toss();
