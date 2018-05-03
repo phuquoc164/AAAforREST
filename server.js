@@ -1,9 +1,8 @@
-const app = require('express')();
+const express = require('express');
 const vhost = require('vhost');
 const proxy = require('http-proxy-middleware');
+const cors = require('cors');
 const configuration = require('./config');
-
-const port = configuration.port;
 
 let hideLocationParts = function(site) {
   return (response) => {
@@ -15,14 +14,31 @@ let hideLocationParts = function(site) {
   }
 }
 
-for (let site of configuration.sites) {
-  app.use(vhost(site.hostProxy, proxy({
+let proxyVhost = function(site) {
+  let result = express();
+  if (site.origin) {
+    let corsPolicy = cors({
+      origin: site.origin,
+      credentials: true
+    });
+    result.options('*', corsPolicy);
+    result.use(corsPolicy);
+  }
+  result.use(proxy({
     target: `http://${site.host||'localhost'}:${site.port||80}`,
     pathRewrite: {
       '': site.path||''
     },
     onProxyRes: hideLocationParts(site)
-  })));
+  }));
+  return result;
+}
+
+const app = express();
+const port = configuration.port;
+
+for (let site of configuration.sites) {
+  app.use(vhost(site.hostProxy, proxyVhost(site)));
 }
 
 app.listen(port, function() {

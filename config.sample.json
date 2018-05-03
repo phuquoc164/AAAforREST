@@ -1,10 +1,11 @@
 {
   "port": 1337,
   "sites": [{
-    "hostProxy": "cassandre.local",
+    "hostProxy": "argos.local",
     "port": 15984,
-    "path": "/cassandre/_design/cassandre/_rewrite",
-    "hideLocationParts": 1
+    "path": "/argos/_design/argos/_rewrite",
+    "hideLocationParts": 1,
+    "origin": "http://localhost:3000"
   }, {
     "hostProxy": "couchdb.local",
     "port": 15984
