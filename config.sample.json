@@ -1,8 +1,12 @@
 {
   "port": 1337,
   "sites": [{
-    "hostProxy": "*.couchdb.local"
+    "hostProxy": "cassandre.local",
+    "port": 15984,
+    "path": "/cassandre/_design/cassandre/_rewrite",
+    "hideLocationParts": 1
   }, {
-    "hostProxy": "xcouchdb.local"
+    "hostProxy": "couchdb.local",
+    "port": 15984
   }]
 }
