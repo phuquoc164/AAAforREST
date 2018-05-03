@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/Hypertopic/AAAforREST#readme",
   "dependencies": {
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "vhost": "^3.0.2"
   }
 }
